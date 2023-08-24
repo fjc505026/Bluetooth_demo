@@ -69,8 +69,8 @@ uint16_t discovery_time     = 0;
 uint8_t  device_role        = 0xFF;
 uint8_t  mtu_exchanged      = 0;
 uint8_t  mtu_exchanged_wait = 0;
-uint16_t write_char_len     = CHAR_VALUE_LENGTH-3;
-uint8_t  data[CHAR_VALUE_LENGTH-3];
+uint16_t write_char_len     =  2; //CHAR_VALUE_LENGTH-3;
+uint8_t  BLUENRG_au8DataBuffer[2]; //  CHAR_VALUE_LENGTH-3
 uint8_t  counter            = 0;
 uint8_t  local_name[] = {AD_TYPE_COMPLETE_LOCAL_NAME,'B','l','u','e','N','R','G','_','S','a','m','p','l','e','A','p','p'};
 
@@ -211,14 +211,17 @@ static void Reset_DiscoveryContext(void)
   device_role = 0xFF;
   mtu_exchanged = 0;
   mtu_exchanged_wait = 0;
-  write_char_len = CHAR_VALUE_LENGTH-3;
+  write_char_len = sizeof(BLUENRG_au8DataBuffer); // CHAR_VALUE_LENGTH-3;
 
-  for (uint16_t i=0; i<(CHAR_VALUE_LENGTH-3); i++) {
-    data[i] = 0x31 + (i%10);
-    if ((i+1)%10==0) {
-      data[i]='x';
-    }
-  }
+  BLUENRG_au8DataBuffer[ 0U ] = (uint8_t) 'E';
+  BLUENRG_au8DataBuffer[ 1U ] = (uint8_t) 'F';
+
+  // for (uint16_t u16Idx = 0U; u16Idx < sizeof(BLUENRG_au8DataBuffer); u16Idx++ ) {
+  //   BLUENRG_au8DataBuffer[u16Idx] = 0x31 + 1U;
+  //   // if ((i+1)%10==0) {
+  //   //   BLUENRG_au8DataBuffer[i]='x';
+  //   // }
+  // }
 }
 
 /*******************************************************************************
@@ -602,27 +605,24 @@ static void User_Process(void)
   /* Check if the user has pushed the button */
   if (BSP_PB_GetState(BUTTON_KEY) == !user_button_init_state)
   {
+    BSP_LED_On(LED2);
     while (BSP_PB_GetState(BUTTON_KEY) == !user_button_init_state);
 
     if(APP_FLAG(CONNECTED) && APP_FLAG(NOTIFICATIONS_ENABLED)){
       /* Send a toggle command to the remote device */
-      uint8_t* data_ptr = data;
+      uint8_t* data_ptr = BLUENRG_au8DataBuffer;
       uint8_t  curr_len = 0;
 
-      while (data_ptr < (data + sizeof(data)))
+      while (data_ptr < (BLUENRG_au8DataBuffer + sizeof(BLUENRG_au8DataBuffer)))
       {
         /* if data to send are greater than the max char value length, send them in chunks */
-        curr_len = ((data + sizeof(data) - data_ptr) > write_char_len) ? (write_char_len) : (data + sizeof(data) - data_ptr);
+        curr_len = ((BLUENRG_au8DataBuffer + sizeof(BLUENRG_au8DataBuffer) - data_ptr) > write_char_len) ? (write_char_len) : (BLUENRG_au8DataBuffer + sizeof(BLUENRG_au8DataBuffer) - data_ptr);
         sendData(data_ptr, curr_len);
         data_ptr += curr_len;
       }
-
-      //BSP_LED_Toggle(LED2);  // toggle the LED2 locally.
-                               // If uncommented be sure BSP_LED_Init(LED2) is
-                               // called in main().
-                               // E.g. it can be enabled for debugging.
     }
   }
+  BSP_LED_Off(LED2);
 
 }
 
