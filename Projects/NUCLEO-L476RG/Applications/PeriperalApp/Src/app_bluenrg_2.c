@@ -108,15 +108,7 @@ void print_csv_time(void){
 
 void MX_BlueNRG_2_Init(void)
 {
-  /* USER CODE BEGIN SV */
 
-  /* USER CODE END SV */
-
-  /* USER CODE BEGIN BlueNRG_2_Init_PreTreatment */
-
-  /* USER CODE END BlueNRG_2_Init_PreTreatment */
-
-  /* Initialize the peripherals and the BLE Stack */
   uint8_t ret;
 
   User_Init();
@@ -125,8 +117,8 @@ void MX_BlueNRG_2_Init(void)
 
   PRINT_DBG("BlueNRG-2 BLE Sample Application\r\n");
 
-  /* Init Sample App Device */
   ret = PeriperalAppInit();
+
   if (ret != BLE_STATUS_SUCCESS)
   {
     PRINT_DBG("PeriperalAppInit()--> Failed 0x%02x\r\n", ret);
@@ -135,9 +127,6 @@ void MX_BlueNRG_2_Init(void)
 
   PRINT_DBG("BLE Stack Initialized & Device Configured\r\n");
 
-  /* USER CODE BEGIN BlueNRG_2_Init_PostTreatment */
-
-  /* USER CODE END BlueNRG_2_Init_PostTreatment */
 }
 
 /*
@@ -145,16 +134,8 @@ void MX_BlueNRG_2_Init(void)
  */
 void MX_BlueNRG_2_Process(void)
 {
-  /* USER CODE BEGIN BlueNRG_2_Process_PreTreatment */
-
-  /* USER CODE END BlueNRG_2_Process_PreTreatment */
-
   hci_user_evt_proc();
   User_Process();
-
-  /* USER CODE BEGIN BlueNRG_2_Process_PostTreatment */
-
-  /* USER CODE END BlueNRG_2_Process_PostTreatment */
 }
 
 /**
@@ -359,6 +340,8 @@ static uint8_t PeriperalAppInit(void)
   uint8_t ret;
   uint16_t service_handle, dev_name_char_handle, appearance_char_handle;
 
+  const uint8_t cu8DeviceNameLen = 7U;
+
   /* Sw reset of the device */
   hci_reset();
   /**
@@ -381,7 +364,7 @@ static uint8_t PeriperalAppInit(void)
   }
 
   /* GAP Init */
-  ret = aci_gap_init(GAP_CENTRAL_ROLE|GAP_PERIPHERAL_ROLE,0x0,0x07, &service_handle,
+  ret = aci_gap_init(GAP_PERIPHERAL_ROLE,0x0,cu8DeviceNameLen, &service_handle,
                      &dev_name_char_handle, &appearance_char_handle);
   if(ret != BLE_STATUS_SUCCESS)
   {
@@ -432,7 +415,7 @@ static void Connection_StateMachine(void)
   case (INIT_STATE):
     {
       Reset_DiscoveryContext();
-      discovery.device_state = START_DISCOVERY_PROC;
+      discovery.device_state = ENTER_DISCOVERY_MODE;
     }
     break; /* end case (INIT_STATE) */
   case (START_DISCOVERY_PROC):
@@ -599,65 +582,6 @@ static void User_Process(void)
     Connection_StateMachine();
     user_button_init_state = BSP_PB_GetState(BUTTON_KEY);
   }
-
-  if (device_role == MASTER_ROLE)
-  {
-    /* Start TX handle Characteristic discovery if not yet done */
-    if (APP_FLAG(CONNECTED) && !APP_FLAG(END_READ_TX_CHAR_HANDLE))
-    {
-      if (!APP_FLAG(START_READ_TX_CHAR_HANDLE))
-      {
-        /* Discovery TX characteristic handle by UUID 128 bits */
-        const uint8_t charUuid128_TX[16] = {0x66,0x9a,0x0c,0x20,0x00,0x08,0x96,0x9e,0xe2,0x11,0x9e,0xb1,0xe1,0xf2,0x73,0xd9};
-
-        BLUENRG_memcpy(&UUID_Tx.UUID_16, charUuid128_TX, 16);
-        aci_gatt_disc_char_by_uuid(connection_handle, 0x0001, 0xFFFF,UUID_TYPE_128,&UUID_Tx);
-        APP_FLAG_SET(START_READ_TX_CHAR_HANDLE);
-      }
-    }
-    /* Start RX handle Characteristic discovery if not yet done */
-    else if (APP_FLAG(CONNECTED) && !APP_FLAG(END_READ_RX_CHAR_HANDLE))
-    {
-      /* Discovery RX characteristic handle by UUID 128 bits */
-      if (!APP_FLAG(START_READ_RX_CHAR_HANDLE))
-      {
-        /* Discovery RX characteristic handle by UUID 128 bits */
-        const uint8_t charUuid128_RX[16] = {0x66,0x9a,0x0c,0x20,0x00,0x08,0x96,0x9e,0xe2,0x11,0x9e,0xb1,0xe2,0xf2,0x73,0xd9};
-
-        BLUENRG_memcpy(&UUID_Rx.UUID_16, charUuid128_RX, 16);
-        aci_gatt_disc_char_by_uuid(connection_handle, 0x0001, 0xFFFF,UUID_TYPE_128,&UUID_Rx);
-        APP_FLAG_SET(START_READ_RX_CHAR_HANDLE);
-      }
-    }
-
-    if(APP_FLAG(CONNECTED) && APP_FLAG(END_READ_TX_CHAR_HANDLE) && APP_FLAG(END_READ_RX_CHAR_HANDLE) && !APP_FLAG(NOTIFICATIONS_ENABLED))
-    {
-      /* Before enabling notifications perform an ATT MTU exchange procedure */
-      if ((mtu_exchanged == 0) && (mtu_exchanged_wait == 0))
-      {
-        PRINT_DBG("ROLE MASTER (mtu_exchanged %d, mtu_exchanged_wait %d)\r\n",
-                  mtu_exchanged, mtu_exchanged_wait);
-
-        uint8_t ret = aci_gatt_exchange_config(connection_handle);
-        if (ret != BLE_STATUS_SUCCESS) {
-          PRINT_DBG("aci_gatt_exchange_configuration error 0x%02x\r\n", ret);
-        }
-        mtu_exchanged_wait = 1;
-      }
-      else if ((mtu_exchanged == 1) && (mtu_exchanged_wait == 2))
-      {
-        uint8_t client_char_conf_data[] = {0x01, 0x00}; // Enable notifications
-        uint32_t tickstart = HAL_GetTick();
-
-        while(aci_gatt_write_char_desc(connection_handle, tx_handle+2, 2, client_char_conf_data)==BLE_STATUS_NOT_ALLOWED)
-        {
-          // Radio is busy.
-          if ((HAL_GetTick() - tickstart) > (10*HCI_DEFAULT_TIMEOUT_MS)) break;
-        }
-        APP_FLAG_SET(NOTIFICATIONS_ENABLED);
-	  }
-    }
-  } /* if (device_role == MASTER_ROLE) */
 
   if (device_role == SLAVE_ROLE) {
     if (APP_FLAG(CONNECTED)) {
