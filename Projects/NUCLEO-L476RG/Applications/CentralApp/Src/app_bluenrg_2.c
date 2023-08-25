@@ -28,19 +28,26 @@
 
 #include <stdio.h>
 
-/* USER CODE BEGIN Includes */
-
-/* USER CODE END Includes */
-
-/* Private defines -----------------------------------------------------------*/
 
 #define BLE_SAMPLE_APP_COMPLETE_LOCAL_NAME_SIZE 18
 
-/* Private macros ------------------------------------------------------------*/
+#define APP_RSSI_THRESHOLD_FAR   (-90)   //dbm
+#define APP_RSSI_THRESHOLD_MID   (-70)   //dbm
 
-/* Private variables ---------------------------------------------------------*/
+#define APP_FAR_LED_TOGGLE_TIMEOUT   ( 2000U )   // 0.25HZ, On/Off cycle for 4 sec
+#define APP_MID_LED_TOGGLE_TIMEOUT   ( 1000U )   // 0.5HZ,  On/Off cycle for 2 sec
+#define APP_NEAR_LED_ON_TIMEOUT      ( 250U )   //  2HZ,   On/Off cycle for 0.5 sec
 
-/* discovery procedure mode context */
+#define APP_RSSI_READING_PERIOD      ( 2000U )   // Read Rssi Value every 2 sec
+
+typedef enum 
+{
+  APP_RANGE_FAR = 0U,
+  APP_RANGE_MID,
+  APP_RANGE_NEAR,
+  APP_RANGE_NONE,
+} APP_tenRange;
+
 typedef struct discoveryContext_s
 {
   uint8_t check_disc_proc_timer;
@@ -59,6 +66,10 @@ static discoveryContext_t discovery;
 volatile int app_flags = SET_CONNECTABLE;
 volatile uint16_t connection_handle = 0;
 extern uint16_t chatServHandle, TXCharHandle, RXCharHandle;
+
+static APP_tenRange APP__enDetectRange = APP_RANGE_NONE;
+static uint32_t APP__u32RxDataCnt = 0U;
+static uint8_t  APP__u8LEDTurnOn = 0U;
 
 /* UUIDs */
 UUID_t UUID_Tx;
@@ -108,15 +119,6 @@ void print_csv_time(void){
 
 void MX_BlueNRG_2_Init(void)
 {
-  /* USER CODE BEGIN SV */
-
-  /* USER CODE END SV */
-
-  /* USER CODE BEGIN BlueNRG_2_Init_PreTreatment */
-
-  /* USER CODE END BlueNRG_2_Init_PreTreatment */
-
-  /* Initialize the peripherals and the BLE Stack */
   uint8_t ret;
 
   User_Init();
@@ -125,7 +127,7 @@ void MX_BlueNRG_2_Init(void)
 
   PRINT_DBG("BlueNRG-2 BLE Sample Application\r\n");
 
-  /* Init Sample App Device */
+
   ret = CentralAppInit();
   if (ret != BLE_STATUS_SUCCESS)
   {
@@ -135,9 +137,6 @@ void MX_BlueNRG_2_Init(void)
 
   PRINT_DBG("BLE Stack Initialized & Device Configured\r\n");
 
-  /* USER CODE BEGIN BlueNRG_2_Init_PostTreatment */
-
-  /* USER CODE END BlueNRG_2_Init_PostTreatment */
 }
 
 /*
@@ -145,16 +144,9 @@ void MX_BlueNRG_2_Init(void)
  */
 void MX_BlueNRG_2_Process(void)
 {
-  /* USER CODE BEGIN BlueNRG_2_Process_PreTreatment */
-
-  /* USER CODE END BlueNRG_2_Process_PreTreatment */
 
   hci_user_evt_proc();
   User_Process();
-
-  /* USER CODE BEGIN BlueNRG_2_Process_PostTreatment */
-
-  /* USER CODE END BlueNRG_2_Process_PostTreatment */
 }
 
 /**
@@ -203,13 +195,19 @@ static void sendData(uint8_t* data_buffer, uint8_t Nb_bytes)
  */
 static void receiveData(uint8_t* data_buffer, uint8_t Nb_bytes)
 {
-  BSP_LED_Toggle(LED2);
+  // BSP_LED_Toggle(LED2);
 
-  for(int i = 0; i < Nb_bytes; i++)
-  {
-    PRINT_DBG("%c", data_buffer[i]);
-  }
-  fflush(stdout);
+  // for(int i = 0; i < Nb_bytes; i++)
+  // {
+  //   PRINT_DBG("%c", data_buffer[i]);
+  // }
+  // fflush(stdout);
+
+  // if( (uint8_t)'E' == data_buffer[0] && (uint8_t)'F' == data_buffer[0] )
+  // {
+
+  // }
+  APP__u32RxDataCnt++;
 }
 
 /*******************************************************************************
@@ -358,6 +356,7 @@ static uint8_t CentralAppInit(void)
 {
   uint8_t ret;
   uint16_t service_handle, dev_name_char_handle, appearance_char_handle;
+  const uint8_t cu8DeviceNameLen = 7U;
 
   /* Sw reset of the device */
   hci_reset();
@@ -381,7 +380,7 @@ static uint8_t CentralAppInit(void)
   }
 
   /* GAP Init */
-  ret = aci_gap_init(GAP_CENTRAL_ROLE|GAP_PERIPHERAL_ROLE,0x0,0x07, &service_handle,
+  ret = aci_gap_init(GAP_CENTRAL_ROLE,0x0,cu8DeviceNameLen, &service_handle,
                      &dev_name_char_handle, &appearance_char_handle);
   if(ret != BLE_STATUS_SUCCESS)
   {
@@ -437,8 +436,6 @@ static void Connection_StateMachine(void)
     break; /* end case (INIT_STATE) */
   case (START_DISCOVERY_PROC):
     {
-      /* LED On to indicate the device is working as CENTRAL */
-      BSP_LED_On(LED2);
 
       ret = aci_gap_start_general_discovery_proc(SCAN_P, SCAN_L, PUBLIC_ADDR, 0x00);
       if (ret != BLE_STATUS_SUCCESS)
@@ -504,7 +501,7 @@ static void Connection_StateMachine(void)
   case (DO_TERMINATE_GAP_PROC):
     {
       /* terminate gap procedure */
-      ret = aci_gap_terminate_gap_proc(0x02); // GENERAL_DISCOVERY_PROCEDURE
+      ret = aci_gap_terminate_gap_proc(GAP_GENERAL_DISCOVERY_PROC); // GENERAL_DISCOVERY_PROCEDURE
       if (ret != BLE_STATUS_SUCCESS)
       {
         PRINT_DBG("aci_gap_terminate_gap_procedure() failed: 0x%02x\r\n", ret);
@@ -549,8 +546,6 @@ static void Connection_StateMachine(void)
     break; /* end case (WAIT_EVENT) */
   case (ENTER_DISCOVERY_MODE):
     {
-      /* LED Off to indicate the device is working as PERIPHERAL */
-      BSP_LED_Off(LED2);
 
       /* Put Peripheral device in discoverable mode */
 
@@ -586,6 +581,73 @@ static void Connection_StateMachine(void)
 
 }/* end Connection_StateMachine() */
 
+
+static void APP__vUpdateDetectRange( int8_t i8Rssi )
+{
+  if ( i8Rssi  < APP_RSSI_THRESHOLD_FAR ) // far range, (-127,-90)
+  {
+    APP__enDetectRange = APP_RANGE_FAR;
+  } 
+  else if ( i8Rssi  < APP_RSSI_THRESHOLD_MID) //mid range, [-90,-70)
+  {
+    APP__enDetectRange = APP_RANGE_MID;
+  }
+  else                               //  close range, [-70, 2)
+  {
+    APP__enDetectRange = APP_RANGE_NEAR;
+  }
+}
+
+static void APP__vLEDHanlder( APP_tenRange enRange )
+{
+  static uint32_t  u32LastTick = 0U;
+  static uint32_t  u32LastRxDataCnt = 0U; 
+
+  switch (enRange)
+  {
+  case APP_RANGE_FAR:
+  {
+    if( HAL_GetTick() - u32LastTick > APP_FAR_LED_TOGGLE_TIMEOUT )
+    {
+      BSP_LED_Toggle(LED2);
+      u32LastTick = HAL_GetTick();
+    }
+  } break;
+
+  case APP_RANGE_MID:
+  {
+    if( HAL_GetTick() - u32LastTick > APP_MID_LED_TOGGLE_TIMEOUT )
+    {
+      BSP_LED_Toggle(LED2);
+      u32LastTick = HAL_GetTick();
+    }
+  } break;
+
+  case APP_RANGE_NEAR:
+  {
+    if ( APP__u32RxDataCnt != u32LastRxDataCnt )   // RX Counter has been changed
+    {
+      u32LastRxDataCnt = APP__u32RxDataCnt;
+      APP__u8LEDTurnOn = 1U;
+      BSP_LED_On(LED2);
+      u32LastTick = HAL_GetTick();
+    }
+
+    if( HAL_GetTick() - u32LastTick > APP_NEAR_LED_ON_TIMEOUT )
+    {
+      BSP_LED_Off(LED2);
+    }
+
+  } break;
+
+  case APP_RANGE_NONE:
+  default:
+  {
+    BSP_LED_Off(LED2);
+  } break;
+  }
+}
+
 /**
  * @brief  Run the state machine.
  *
@@ -594,6 +656,8 @@ static void Connection_StateMachine(void)
  */
 static void User_Process(void)
 {
+  static uint32_t u32LastRssiReadTick = 0U;
+
   if(APP_FLAG(SET_CONNECTABLE))
   {
     Connection_StateMachine();
@@ -659,48 +723,21 @@ static void User_Process(void)
     }
   } /* if (device_role == MASTER_ROLE) */
 
-  if (device_role == SLAVE_ROLE) {
-    if (APP_FLAG(CONNECTED)) {
-      if ((mtu_exchanged == 0) && (mtu_exchanged_wait == 0))
-      {
-        PRINT_DBG("ROLE SLAVE (mtu_exchanged %d, mtu_exchanged_wait %d)\r\n",
-                  mtu_exchanged, mtu_exchanged_wait);
 
-        mtu_exchanged_wait = 1;
-        uint8_t ret = aci_gatt_exchange_config(connection_handle);
-        if (ret != BLE_STATUS_SUCCESS) {
-          PRINT_DBG("aci_gatt_exchange_configuration error 0x%02x\r\n", ret);
-        }
-      }
-    }
-  }
-
-  /* Check if the user has pushed the button */
-  if (BSP_PB_GetState(BUTTON_KEY) == !user_button_init_state)
+  if( APP_FLAG(CONNECTED) && APP_FLAG(NOTIFICATIONS_ENABLED) )
   {
-    while (BSP_PB_GetState(BUTTON_KEY) == !user_button_init_state);
-
-    if(APP_FLAG(CONNECTED) && APP_FLAG(NOTIFICATIONS_ENABLED)){
-      /* Send a toggle command to the remote device */
-      uint8_t* data_ptr = data;
-      uint8_t  curr_len = 0;
-
-      while (data_ptr < (data + sizeof(data)))
-      {
-        /* if data to send are greater than the max char value length, send them in chunks */
-        curr_len = ((data + sizeof(data) - data_ptr) > write_char_len) ? (write_char_len) : (data + sizeof(data) - data_ptr);
-        sendData(data_ptr, curr_len);
-        data_ptr += curr_len;
-      }
-
-      //BSP_LED_Toggle(LED2);  // toggle the LED2 locally.
-                               // If uncommented be sure BSP_LED_Init(LED2) is
-                               // called in main().
-                               // E.g. it can be enabled for debugging.
+    if ( HAL_GetTick() -  u32LastRssiReadTick > APP_RSSI_READING_PERIOD )
+    {
+      int8_t i8tempRssi;
+      hci_read_rssi(connection_handle, &i8tempRssi);
+      APP__vUpdateDetectRange(i8tempRssi);
     }
+  
   }
 
+  APP__vLEDHanlder( APP__enDetectRange );
 }
+
 
 /* ***************** BlueNRG-1 Stack Callbacks ********************************/
 
@@ -735,7 +772,7 @@ void aci_gap_proc_complete_event(uint8_t Procedure_Code,
          go to discovery mode */
       discovery.check_disc_proc_timer = FALSE;
       discovery.startTime = 0;
-      discovery.device_state = ENTER_DISCOVERY_MODE;
+      discovery.device_state = INIT_STATE;
     }
   }
 }
@@ -808,6 +845,7 @@ void hci_disconnection_complete_event(uint8_t Status,
 
 }/* end hci_disconnection_complete_event() */
 
+
 /*******************************************************************************
  * Function Name  : hci_le_advertising_report_event.
  * Description    : An advertising report is received.
@@ -832,16 +870,24 @@ void hci_le_advertising_report_event(uint8_t Num_Reports,
     /* BLE CentralApp device not yet found: check current device found */
     if ((evt_type == ADV_IND) && Find_DeviceName(data_length, Advertising_Report[0].Data))
     {
-      discovery.is_device_found = TRUE;
-      discovery.do_connect = TRUE;
-      discovery.check_disc_proc_timer = FALSE;
-      discovery.check_disc_mode_timer = FALSE;
-      /* store first device found:  address type and address value */
-      discovery.device_found_address_type = bdaddr_type;
-      BLUENRG_memcpy(discovery.device_found_address, bdaddr, 6);
-      /* device is found: terminate discovery procedure */
-      discovery.device_state = DO_TERMINATE_GAP_PROC;
-      PRINT_DBG("Device found\r\n");
+      int8_t i8Rssi = Advertising_Report[0].RSSI;
+
+      APP__vUpdateDetectRange(i8Rssi);
+
+      if( APP__enDetectRange == APP_RANGE_NEAR )
+      {
+        discovery.is_device_found = TRUE;
+        discovery.do_connect = TRUE;
+        discovery.check_disc_proc_timer = FALSE;
+        discovery.check_disc_mode_timer = FALSE;
+        /* store first device found:  address type and address value */
+        discovery.device_found_address_type = bdaddr_type;
+        BLUENRG_memcpy(discovery.device_found_address, bdaddr, 6);
+        /* device is found: terminate discovery procedure */
+        discovery.device_state = DO_TERMINATE_GAP_PROC;
+        PRINT_DBG("Device found\r\n");
+      }
+
     }
   }
 } /* hci_le_advertising_report_event() */
@@ -908,10 +954,10 @@ void aci_gatt_disc_read_char_by_uuid_resp_event(uint16_t Connection_Handle,
        * LED blinking on the CENTRAL device to indicate the characteristic
        * discovery process has terminated
        */
-      for (uint8_t i=0; i<9; i++) {
-        BSP_LED_Toggle(LED2);
-        HAL_Delay(250);
-      }
+      // for (uint8_t i=0; i<9; i++) {
+      //   BSP_LED_Toggle(LED2);
+      //   HAL_Delay(250);
+      // }
     }
   }
 } /* end aci_gatt_disc_read_char_by_uuid_resp_event() */
