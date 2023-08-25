@@ -31,20 +31,22 @@
 
 #define BLE_SAMPLE_APP_COMPLETE_LOCAL_NAME_SIZE 18
 
-#define APP_RSSI_THRESHOLD_FAR   (-90)   //dbm
-#define APP_RSSI_THRESHOLD_MID   (-70)   //dbm
+#define APP_RSSI_THRESHOLD_FAR   (-85)   //~3M
+#define APP_RSSI_THRESHOLD_MID   (-75)   //~1M 
+#define APP_RSSI_THRESHOLD_NEAR  (-65)   //~0.5M  
 
 #define APP_FAR_LED_TOGGLE_TIMEOUT   ( 2000U )   // 0.25HZ, On/Off cycle for 4 sec
-#define APP_MID_LED_TOGGLE_TIMEOUT   ( 1000U )   // 0.5HZ,  On/Off cycle for 2 sec
+#define APP_MID_LED_TOGGLE_TIMEOUT   ( 50U )   // 0.5HZ,  On/Off cycle for 2 sec
 #define APP_NEAR_LED_ON_TIMEOUT      ( 250U )   //  2HZ,   On/Off cycle for 0.5 sec
 
 #define APP_RSSI_READING_PERIOD      ( 2000U )   // Read Rssi Value every 2 sec
 
 typedef enum 
 {
-  APP_RANGE_FAR = 0U,
+  APP_RANGE_NEAR = 0U,
   APP_RANGE_MID,
-  APP_RANGE_NEAR,
+  APP_RANGE_FAR,
+  APP_RANGE_CONNECT,
   APP_RANGE_NONE,
 } APP_tenRange;
 
@@ -83,7 +85,7 @@ uint8_t  mtu_exchanged_wait = 0;
 uint16_t write_char_len     = CHAR_VALUE_LENGTH-3;
 uint8_t  data[CHAR_VALUE_LENGTH-3];
 uint8_t  counter            = 0;
-uint8_t  local_name[] = {AD_TYPE_COMPLETE_LOCAL_NAME,'B','l','u','e','N','R','G','_','S','a','m','p','l','e','A','p','p'};
+uint8_t  local_name[] = {AD_TYPE_COMPLETE_LOCAL_NAME,'B','L','E','e','N','R','G','_','S','a','m','p','l','e','A','p','p'};
 
 /* USER CODE BEGIN PV */
 
@@ -195,19 +197,20 @@ static void sendData(uint8_t* data_buffer, uint8_t Nb_bytes)
  */
 static void receiveData(uint8_t* data_buffer, uint8_t Nb_bytes)
 {
-  // BSP_LED_Toggle(LED2);
 
+  // PRINT_DBG("[RX]:");
   // for(int i = 0; i < Nb_bytes; i++)
   // {
-  //   PRINT_DBG("%c", data_buffer[i]);
+  //   PRINT_DBG("%d", data_buffer[i]);
   // }
   // fflush(stdout);
 
-  // if( (uint8_t)'E' == data_buffer[0] && (uint8_t)'F' == data_buffer[0] )
-  // {
+  if( 1U == data_buffer[0])
+  {
+    APP__u32RxDataCnt++;
+    PRINT_DBG("[RX] Notified\r\n");
+  }
 
-  // }
-  APP__u32RxDataCnt++;
 }
 
 /*******************************************************************************
@@ -303,8 +306,10 @@ static uint8_t Find_DeviceName(uint8_t data_length, uint8_t *data_value)
     /* Check if field is complete local name and the length is the expected one for BLE CentralApp  */
     if (data_value[index+1] == AD_TYPE_COMPLETE_LOCAL_NAME)
     {
+      data_value[index+10] = '\0';
+      PRINT_DBG("[Device name] %s\r\n", &data_value[index+1]);
       /* check if found device name is the expected one: local_name */
-      if (BLUENRG_memcmp(&data_value[index+1], &local_name[0], BLE_SAMPLE_APP_COMPLETE_LOCAL_NAME_SIZE) == 0)
+      if (BLUENRG_memcmp(&data_value[index+1], &local_name[0], 3) == 0)
       {
         return TRUE;
       }
@@ -584,18 +589,37 @@ static void Connection_StateMachine(void)
 
 static void APP__vUpdateDetectRange( int8_t i8Rssi )
 {
-  if ( i8Rssi  < APP_RSSI_THRESHOLD_FAR ) // far range, (-127,-90)
+  static APP_tenRange enLastRange = APP_RANGE_NONE;
+  
+  if ( i8Rssi == (int8_t)127 )
   {
-    APP__enDetectRange = APP_RANGE_FAR;
-  } 
-  else if ( i8Rssi  < APP_RSSI_THRESHOLD_MID) //mid range, [-90,-70)
+    APP__enDetectRange = APP_RANGE_NONE;
+  }
+  else if ( i8Rssi  > APP_RSSI_THRESHOLD_NEAR) // 0-0.5M
+  {
+     APP__enDetectRange = APP_RANGE_NEAR;
+  }
+  else if ( i8Rssi  > APP_RSSI_THRESHOLD_MID) // 0.5M-1M
   {
     APP__enDetectRange = APP_RANGE_MID;
   }
-  else                               //  close range, [-70, 2)
+  else if ( i8Rssi  > APP_RSSI_THRESHOLD_FAR) // 1M-3M
   {
-    APP__enDetectRange = APP_RANGE_NEAR;
+      APP__enDetectRange = APP_RANGE_FAR;
   }
+  else  // more than 3M
+  {
+    APP__enDetectRange = APP_RANGE_CONNECT;
+  }
+
+  if ( enLastRange != APP__enDetectRange)
+  {
+    const char * apccRangeStr[] = {"NEAR", "MID", "FAR", "CONNECTABLE","NONE"};
+    PRINT_DBG("[RANGE] %s -> %s \r\n",apccRangeStr[ (uint8_t)enLastRange], apccRangeStr[ (uint8_t)APP__enDetectRange]);
+    enLastRange = APP__enDetectRange;
+  }
+
+
 }
 
 static void APP__vLEDHanlder( APP_tenRange enRange )
@@ -605,46 +629,56 @@ static void APP__vLEDHanlder( APP_tenRange enRange )
 
   switch (enRange)
   {
-  case APP_RANGE_FAR:
-  {
-    if( HAL_GetTick() - u32LastTick > APP_FAR_LED_TOGGLE_TIMEOUT )
-    {
-      BSP_LED_Toggle(LED2);
-      u32LastTick = HAL_GetTick();
-    }
-  } break;
 
-  case APP_RANGE_MID:
-  {
-    if( HAL_GetTick() - u32LastTick > APP_MID_LED_TOGGLE_TIMEOUT )
+    case APP_RANGE_CONNECT:
     {
-      BSP_LED_Toggle(LED2);
-      u32LastTick = HAL_GetTick();
-    }
-  } break;
-
-  case APP_RANGE_NEAR:
-  {
-    if ( APP__u32RxDataCnt != u32LastRxDataCnt )   // RX Counter has been changed
-    {
-      u32LastRxDataCnt = APP__u32RxDataCnt;
-      APP__u8LEDTurnOn = 1U;
-      BSP_LED_On(LED2);
-      u32LastTick = HAL_GetTick();
-    }
-
-    if( HAL_GetTick() - u32LastTick > APP_NEAR_LED_ON_TIMEOUT )
+      // if( HAL_GetTick() - u32LastTick > 3*APP_FAR_LED_TOGGLE_TIMEOUT )
+      // {
+      //   BSP_LED_Toggle(LED2);
+      //   u32LastTick = HAL_GetTick();
+      // }
+      BSP_LED_Off(LED2);
+    } break;
+    case APP_RANGE_FAR:
     {
       BSP_LED_Off(LED2);
-    }
+      // if( HAL_GetTick() - u32LastTick > APP_FAR_LED_TOGGLE_TIMEOUT )
+      // {
+      //   BSP_LED_Toggle(LED2);
+      //   u32LastTick = HAL_GetTick();
+      // }
+    } break;
 
-  } break;
+    case APP_RANGE_MID:
+    {
+      if( HAL_GetTick() - u32LastTick > APP_MID_LED_TOGGLE_TIMEOUT )
+      {
+        BSP_LED_Toggle(LED2);
+        u32LastTick = HAL_GetTick();
+      }
+    } break;
 
-  case APP_RANGE_NONE:
-  default:
-  {
-    BSP_LED_Off(LED2);
-  } break;
+    case APP_RANGE_NEAR:
+    {
+      if ( APP__u32RxDataCnt != u32LastRxDataCnt )   // RX Counter has been changed
+      {
+        u32LastRxDataCnt = APP__u32RxDataCnt;
+        APP__u8LEDTurnOn = 1U;
+        BSP_LED_On(LED2);
+        u32LastTick = HAL_GetTick();
+      }
+
+      if( HAL_GetTick() - u32LastTick > APP_NEAR_LED_ON_TIMEOUT )
+      {
+        BSP_LED_Off(LED2);
+      }
+
+    } break;
+    case APP_RANGE_NONE:
+    default:
+    {
+      BSP_LED_Off(LED2);
+    } break;
   }
 }
 
@@ -696,20 +730,30 @@ static void User_Process(void)
 
     if(APP_FLAG(CONNECTED) && APP_FLAG(END_READ_TX_CHAR_HANDLE) && APP_FLAG(END_READ_RX_CHAR_HANDLE) && !APP_FLAG(NOTIFICATIONS_ENABLED))
     {
-      /* Before enabling notifications perform an ATT MTU exchange procedure */
-      if ((mtu_exchanged == 0) && (mtu_exchanged_wait == 0))
-      {
-        PRINT_DBG("ROLE MASTER (mtu_exchanged %d, mtu_exchanged_wait %d)\r\n",
-                  mtu_exchanged, mtu_exchanged_wait);
+      //   /* Before enabling notifications perform an ATT MTU exchange procedure */
+      //   if ((mtu_exchanged == 0) && (mtu_exchanged_wait == 0))
+      //   {
+      //     PRINT_DBG("ROLE MASTER (mtu_exchanged %d, mtu_exchanged_wait %d)\r\n",
+      //               mtu_exchanged, mtu_exchanged_wait);
 
-        uint8_t ret = aci_gatt_exchange_config(connection_handle);
-        if (ret != BLE_STATUS_SUCCESS) {
-          PRINT_DBG("aci_gatt_exchange_configuration error 0x%02x\r\n", ret);
-        }
-        mtu_exchanged_wait = 1;
-      }
-      else if ((mtu_exchanged == 1) && (mtu_exchanged_wait == 2))
-      {
+      //     uint8_t ret = aci_gatt_exchange_config(connection_handle);
+      //     if (ret != BLE_STATUS_SUCCESS) {
+      //       PRINT_DBG("aci_gatt_exchange_configuration error 0x%02x\r\n", ret);
+      //     }
+      //     mtu_exchanged_wait = 1;
+      //   }
+      //   else if ((mtu_exchanged == 1) && (mtu_exchanged_wait == 2))
+      //   {
+      //     uint8_t client_char_conf_data[] = {0x01, 0x00}; // Enable notifications
+      //     uint32_t tickstart = HAL_GetTick();
+
+      //     while(aci_gatt_write_char_desc(connection_handle, tx_handle+2, 2, client_char_conf_data)==BLE_STATUS_NOT_ALLOWED)
+      //     {
+      //       // Radio is busy.
+      //       if ((HAL_GetTick() - tickstart) > (10*HCI_DEFAULT_TIMEOUT_MS)) break;
+      //     }
+      //     APP_FLAG_SET(NOTIFICATIONS_ENABLED);
+      // }
         uint8_t client_char_conf_data[] = {0x01, 0x00}; // Enable notifications
         uint32_t tickstart = HAL_GetTick();
 
@@ -719,7 +763,6 @@ static void User_Process(void)
           if ((HAL_GetTick() - tickstart) > (10*HCI_DEFAULT_TIMEOUT_MS)) break;
         }
         APP_FLAG_SET(NOTIFICATIONS_ENABLED);
-	  }
     }
   } /* if (device_role == MASTER_ROLE) */
 
@@ -731,6 +774,8 @@ static void User_Process(void)
       int8_t i8tempRssi;
       hci_read_rssi(connection_handle, &i8tempRssi);
       APP__vUpdateDetectRange(i8tempRssi);
+      PRINT_DBG("[RSSI] %d dBm\r\n",i8tempRssi);
+      u32LastRssiReadTick = HAL_GetTick();
     }
   
   }
@@ -839,6 +884,8 @@ void hci_disconnection_complete_event(uint8_t Status,
   APP_FLAG_CLEAR(START_READ_RX_CHAR_HANDLE);
   APP_FLAG_CLEAR(END_READ_RX_CHAR_HANDLE);
   APP_FLAG_CLEAR(TX_BUFFER_FULL);
+
+  APP__vUpdateDetectRange(127);
 
   PRINT_DBG("Disconnection with reason: 0x%02X\r\n", Reason);
   Reset_DiscoveryContext();

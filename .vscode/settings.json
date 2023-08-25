@@ -1,0 +1,9 @@
+{
+    "files.associations": {
+        "app_bluenrg_2.h": "c",
+        "bluenrg1_aci.h": "c",
+        "gatt_db.h": "c",
+        "bluenrg1_events.h": "c",
+        "bluenrg1_hci_le.h": "c"
+    }
+}
