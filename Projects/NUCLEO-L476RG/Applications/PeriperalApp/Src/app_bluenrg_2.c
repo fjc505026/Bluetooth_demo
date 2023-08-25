@@ -27,6 +27,8 @@
 #include "gatt_db.h"
 
 #include <stdio.h>
+#include <math.h>  
+#include <stdlib.h> 
 
 /* USER CODE BEGIN Includes */
 
@@ -35,6 +37,10 @@
 /* Private defines -----------------------------------------------------------*/
 
 #define BLE_SAMPLE_APP_COMPLETE_LOCAL_NAME_SIZE 18
+
+#define APP_RSSI_READ_PERIOD ( 3000U )
+
+#define APP_TX_DATA_LEN      ( 4U )
 
 /* Private macros ------------------------------------------------------------*/
 
@@ -69,8 +75,8 @@ uint16_t discovery_time     = 0;
 uint8_t  device_role        = 0xFF;
 uint8_t  mtu_exchanged      = 0;
 uint8_t  mtu_exchanged_wait = 0;
-uint16_t write_char_len     =  2; //CHAR_VALUE_LENGTH-3;
-uint8_t  BLUENRG_au8DataBuffer[2]; //  CHAR_VALUE_LENGTH-3
+uint16_t write_char_len     =  APP_TX_DATA_LEN; //CHAR_VALUE_LENGTH-3;
+uint8_t  BLUENRG_au8DataBuffer[APP_TX_DATA_LEN]; //  CHAR_VALUE_LENGTH-3
 uint8_t  counter            = 0;
 uint8_t  local_name[] = {AD_TYPE_COMPLETE_LOCAL_NAME,'B','l','u','e','N','R','G','_','S','a','m','p','l','e','A','p','p'};
 
@@ -213,8 +219,12 @@ static void Reset_DiscoveryContext(void)
   mtu_exchanged_wait = 0;
   write_char_len = sizeof(BLUENRG_au8DataBuffer); // CHAR_VALUE_LENGTH-3;
 
-  BLUENRG_au8DataBuffer[ 0U ] = (uint8_t) 'E';
+  
+
+  BLUENRG_au8DataBuffer[ 0U ] = (uint8_t) 'F';
   BLUENRG_au8DataBuffer[ 1U ] = (uint8_t) 'F';
+  BLUENRG_au8DataBuffer[ 2U ] = (uint8_t) 'F';
+  BLUENRG_au8DataBuffer[ 3U ] = (uint8_t) 'F';
 
   // for (uint16_t u16Idx = 0U; u16Idx < sizeof(BLUENRG_au8DataBuffer); u16Idx++ ) {
   //   BLUENRG_au8DataBuffer[u16Idx] = 0x31 + 1U;
@@ -580,6 +590,12 @@ static void Connection_StateMachine(void)
  */
 static void User_Process(void)
 {
+
+  static uint32_t u32LastRssiGetTick = 0U;
+  static  int8_t i8LastRSSI = 127;
+  int8_t i8RSSI= 127;
+  
+
   if(APP_FLAG(SET_CONNECTABLE))
   {
     Connection_StateMachine();
@@ -605,7 +621,7 @@ static void User_Process(void)
   /* Check if the user has pushed the button */
   if (BSP_PB_GetState(BUTTON_KEY) == !user_button_init_state)
   {
-    BSP_LED_On(LED2);
+    
     while (BSP_PB_GetState(BUTTON_KEY) == !user_button_init_state);
 
     if(APP_FLAG(CONNECTED) && APP_FLAG(NOTIFICATIONS_ENABLED)){
@@ -622,6 +638,24 @@ static void User_Process(void)
       }
     }
   }
+ 
+
+  if(APP_FLAG(CONNECTED) && APP_FLAG(NOTIFICATIONS_ENABLED)){
+
+    if(HAL_GetTick() - u32LastRssiGetTick >  APP_RSSI_READ_PERIOD )
+    {
+      BSP_LED_On(LED2);
+      hci_read_rssi( connection_handle, &i8RSSI );
+      u32LastRssiGetTick = HAL_GetTick();
+      if( i8RSSI != i8LastRSSI )
+      {
+        itoa(i8RSSI, BLUENRG_au8DataBuffer, 10);
+        sendData(BLUENRG_au8DataBuffer, sizeof(BLUENRG_au8DataBuffer));
+        i8LastRSSI = i8RSSI; 
+      }
+    }
+  }
+
   BSP_LED_Off(LED2);
 
 }

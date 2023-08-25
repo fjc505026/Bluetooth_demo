@@ -163,15 +163,7 @@
 		<project id="PeriperalApp.null.1612467369" name="PeriperalApp"/>
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
-	<storageModule moduleId="scannerConfiguration">
-		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-		<scannerConfigBuildInfo instanceId="com.st.stm32cube.ide.mcu.gnu.managedbuild.config.exe.release.34052335;com.st.stm32cube.ide.mcu.gnu.managedbuild.config.exe.release.34052335.;com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.1295974130;com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.750993021">
-			<autodiscovery enabled="false" problemReportingEnabled="true" selectedProfileId=""/>
-		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="com.st.stm32cube.ide.mcu.gnu.managedbuild.config.exe.debug.213897300;com.st.stm32cube.ide.mcu.gnu.managedbuild.config.exe.debug.213897300.;com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.1108715851;com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.749819098">
-			<autodiscovery enabled="false" problemReportingEnabled="true" selectedProfileId=""/>
-		</scannerConfigBuildInfo>
-	</storageModule>
 	<storageModule moduleId="refreshScope"/>
 	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
+	<storageModule moduleId="scannerConfiguration"/>
 </cproject>
