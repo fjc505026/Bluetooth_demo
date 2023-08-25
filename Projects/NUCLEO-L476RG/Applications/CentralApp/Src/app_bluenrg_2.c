@@ -39,7 +39,7 @@
 #define APP_MID_LED_TOGGLE_TIMEOUT   ( 50U )   // 0.5HZ,  On/Off cycle for 2 sec
 #define APP_NEAR_LED_ON_TIMEOUT      ( 250U )   //  2HZ,   On/Off cycle for 0.5 sec
 
-#define APP_RSSI_READING_PERIOD      ( 2000U )   // Read Rssi Value every 2 sec
+#define APP_RSSI_READING_PERIOD      ( 1000U )   // Read Rssi Value every 2 sec
 
 typedef enum 
 {
@@ -62,7 +62,7 @@ typedef struct discoveryContext_s
   uint16_t device_state;
 } discoveryContext_t;
 
-uint8_t user_button_init_state;
+
 
 static discoveryContext_t discovery;
 volatile int app_flags = SET_CONNECTABLE;
@@ -616,7 +616,19 @@ static void APP__vUpdateDetectRange( int8_t i8Rssi )
   {
     const char * apccRangeStr[] = {"NEAR", "MID", "FAR", "CONNECTABLE","NONE"};
     PRINT_DBG("[RANGE] %s -> %s \r\n",apccRangeStr[ (uint8_t)enLastRange], apccRangeStr[ (uint8_t)APP__enDetectRange]);
+
+    if(APP__enDetectRange == APP_RANGE_NEAR )
+    {
+      PRINT_DBG("UNLOCK!!!\r\n");
+    }
+    else
+    {
+      PRINT_DBG("LOCKED!!!\r\n");
+    }
+    
     enLastRange = APP__enDetectRange;
+
+
   }
 
 
@@ -692,10 +704,11 @@ static void User_Process(void)
 {
   static uint32_t u32LastRssiReadTick = 0U;
 
+  int8_t i8ButtonPressed = BSP_PB_GetState(BUTTON_KEY);
+
   if(APP_FLAG(SET_CONNECTABLE))
   {
     Connection_StateMachine();
-    user_button_init_state = BSP_PB_GetState(BUTTON_KEY);
   }
 
   if (device_role == MASTER_ROLE)
@@ -777,10 +790,35 @@ static void User_Process(void)
       PRINT_DBG("[RSSI] %d dBm\r\n",i8tempRssi);
       u32LastRssiReadTick = HAL_GetTick();
     }
+
+
+    if( APP__enDetectRange == APP_RANGE_NEAR  ) 
+    {
+      if ( i8ButtonPressed == 1U )
+      {
+        BSP_LED_Off(LED2);
+      }
+      else
+      {
+        BSP_LED_On(LED2);
+      }
+      
+    } 
+    else
+    {
+        BSP_LED_On(LED2);
+    }
   
   }
+  else
+  {
+    BSP_LED_On(LED2);
+  }
 
-  APP__vLEDHanlder( APP__enDetectRange );
+
+  
+ 
+  //APP__vLEDHanlder( APP__enDetectRange );
 }
 
 

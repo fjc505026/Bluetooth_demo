@@ -34,6 +34,8 @@ int main(void)
   MX_GPIO_Init();
   MX_BlueNRG_2_Init();
 
+ 
+
   while (1)
   {
     MX_BlueNRG_2_Process();

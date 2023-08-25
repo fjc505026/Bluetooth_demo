@@ -4,6 +4,7 @@
         "bluenrg1_aci.h": "c",
         "gatt_db.h": "c",
         "bluenrg1_events.h": "c",
-        "bluenrg1_hci_le.h": "c"
+        "bluenrg1_hci_le.h": "c",
+        "main.h": "c"
     }
 }
