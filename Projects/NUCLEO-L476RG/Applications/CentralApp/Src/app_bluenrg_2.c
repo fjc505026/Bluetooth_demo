@@ -27,6 +27,7 @@
 #include "gatt_db.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 
 
 #define BLE_SAMPLE_APP_COMPLETE_LOCAL_NAME_SIZE 18
@@ -590,7 +591,15 @@ static void Connection_StateMachine(void)
 static void APP__vUpdateDetectRange( int8_t i8Rssi )
 {
   static APP_tenRange enLastRange = APP_RANGE_NONE;
-  
+  static int8_t i8LastRssi = -127;
+
+  if ( abs(i8Rssi - i8LastRssi) < 5 )
+  {
+    return;
+  }
+
+  i8LastRssi = i8Rssi;
+
   if ( i8Rssi == (int8_t)127 )
   {
     APP__enDetectRange = APP_RANGE_NONE;
@@ -627,8 +636,6 @@ static void APP__vUpdateDetectRange( int8_t i8Rssi )
     }
     
     enLastRange = APP__enDetectRange;
-
-
   }
 
 
