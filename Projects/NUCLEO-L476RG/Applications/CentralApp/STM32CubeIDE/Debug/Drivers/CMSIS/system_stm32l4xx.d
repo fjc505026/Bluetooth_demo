@@ -1,5 +1,5 @@
 Drivers/CMSIS/system_stm32l4xx.o: \
- C:/Users/Jingchen\ Fan/Desktop/en.x-cube-ble2/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/system_stm32l4xx.c \
+ C:/Users/jingchen.fan/demo/Bluetooth_demo/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/system_stm32l4xx.c \
  ../../../../../../Drivers/CMSIS/Device/ST/STM32L4xx/Include/stm32l4xx.h \
  ../../../../../../Drivers/CMSIS/Device/ST/STM32L4xx/Include/stm32l476xx.h \
  ../../../../../../Drivers/CMSIS/Include/core_cm4.h \

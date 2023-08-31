@@ -1,5 +1,5 @@
 Drivers/STM32L4xx_HAL_Driver/stm32l4xx_hal_pwr_ex.o: \
- C:/Users/Jingchen\ Fan/Desktop/en.x-cube-ble2/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_pwr_ex.c \
+ C:/Users/jingchen.fan/demo/Bluetooth_demo/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_pwr_ex.c \
  ../../../../../../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal.h \
  ../../Inc/stm32l4xx_hal_conf.h \
  ../../../../../../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_rcc.h \

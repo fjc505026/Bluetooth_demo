@@ -64,8 +64,8 @@ all: main-build
 main-build: CentralApp.elf secondary-outputs
 
 # Tool invocations
-CentralApp.elf CentralApp.map: $(OBJS) $(USER_OBJS) C:\Users\Jingchen\ Fan\Desktop\en.x-cube-ble2\Projects\NUCLEO-L476RG\Applications\CentralApp\STM32CubeIDE\STM32L476RGTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "CentralApp.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\Jingchen Fan\Desktop\en.x-cube-ble2\Projects\NUCLEO-L476RG\Applications\CentralApp\STM32CubeIDE\STM32L476RGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="CentralApp.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+CentralApp.elf CentralApp.map: $(OBJS) $(USER_OBJS) C:\Users\jingchen.fan\demo\Bluetooth_demo\Projects\NUCLEO-L476RG\Applications\CentralApp\STM32CubeIDE\STM32L476RGTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "CentralApp.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\jingchen.fan\demo\Bluetooth_demo\Projects\NUCLEO-L476RG\Applications\CentralApp\STM32CubeIDE\STM32L476RGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="CentralApp.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

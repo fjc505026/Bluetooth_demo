@@ -1,5 +1,5 @@
 Application/User/hci_tl_interface.o: \
- C:/Users/Jingchen\ Fan/Desktop/en.x-cube-ble2/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/hci_tl_interface.c \
+ C:/Users/jingchen.fan/demo/Bluetooth_demo/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/hci_tl_interface.c \
  ../../Inc/RTE_Components.h \
  ../../../../../../Middlewares/ST/BlueNRG-2/hci/hci_tl_patterns/Basic/hci_tl.h \
  ../../Inc/hci_tl_interface.h ../../Inc/stm32l4xx_nucleo_bus.h \

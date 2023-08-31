@@ -1,5 +1,5 @@
 Application/User/gatt_db.o: \
- C:/Users/Jingchen\ Fan/Desktop/en.x-cube-ble2/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/gatt_db.c \
+ C:/Users/jingchen.fan/demo/Bluetooth_demo/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/gatt_db.c \
  ../../Inc/gatt_db.h \
  ../../../../../../Middlewares/ST/BlueNRG-2/includes/hci.h \
  ../../../../../../Middlewares/ST/BlueNRG-2/includes/bluenrg1_types.h \

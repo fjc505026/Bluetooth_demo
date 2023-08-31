@@ -1,5 +1,5 @@
 Application/User/stm32l4xx_nucleo_bus.o: \
- C:/Users/Jingchen\ Fan/Desktop/en.x-cube-ble2/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/stm32l4xx_nucleo_bus.c \
+ C:/Users/jingchen.fan/demo/Bluetooth_demo/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/stm32l4xx_nucleo_bus.c \
  ../../Inc/stm32l4xx_nucleo_bus.h ../../Inc/stm32l4xx_nucleo_conf.h \
  ../../../../../../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal.h \
  ../../Inc/stm32l4xx_hal_conf.h \

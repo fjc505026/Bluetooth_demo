@@ -1,6 +1,6 @@
 Middlewares/BlueNRG-2/Wireless/BlueNRG-2/Utils/ble_list.o: \
- C:/Users/Jingchen\ Fan/Desktop/en.x-cube-ble2/Middlewares/ST/BlueNRG-2/utils/ble_list.c \
- C:/Users/Jingchen\ Fan/Desktop/en.x-cube-ble2/Middlewares/ST/BlueNRG-2/utils/ble_list.h \
+ C:/Users/jingchen.fan/demo/Bluetooth_demo/Middlewares/ST/BlueNRG-2/utils/ble_list.c \
+ C:/Users/jingchen.fan/demo/Bluetooth_demo/Middlewares/ST/BlueNRG-2/utils/ble_list.h \
  ../../Inc/ble_list_utils.h \
  ../../../../../../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal.h \
  ../../Inc/stm32l4xx_hal_conf.h \
@@ -32,7 +32,7 @@ Middlewares/BlueNRG-2/Wireless/BlueNRG-2/Utils/ble_list.o: \
  ../../../../../../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_spi_ex.h \
  ../../../../../../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_uart.h \
  ../../../../../../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_uart_ex.h
-C:/Users/Jingchen\ Fan/Desktop/en.x-cube-ble2/Middlewares/ST/BlueNRG-2/utils/ble_list.h:
+C:/Users/jingchen.fan/demo/Bluetooth_demo/Middlewares/ST/BlueNRG-2/utils/ble_list.h:
 ../../Inc/ble_list_utils.h:
 ../../../../../../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal.h:
 ../../Inc/stm32l4xx_hal_conf.h:

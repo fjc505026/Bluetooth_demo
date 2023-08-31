@@ -1,5 +1,5 @@
 Application/User/app_bluenrg_2.o: \
- C:/Users/Jingchen\ Fan/Desktop/en.x-cube-ble2/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/app_bluenrg_2.c \
+ C:/Users/jingchen.fan/demo/Bluetooth_demo/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/app_bluenrg_2.c \
  ../../Inc/app_bluenrg_2.h ../../Inc/stm32l4xx_nucleo.h \
  ../../Inc/stm32l4xx_nucleo_conf.h \
  ../../../../../../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal.h \

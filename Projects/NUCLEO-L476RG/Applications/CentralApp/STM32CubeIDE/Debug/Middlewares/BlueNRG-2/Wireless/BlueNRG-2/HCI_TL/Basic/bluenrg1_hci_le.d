@@ -1,5 +1,5 @@
 Middlewares/BlueNRG-2/Wireless/BlueNRG-2/HCI_TL/Basic/bluenrg1_hci_le.o: \
- C:/Users/Jingchen\ Fan/Desktop/en.x-cube-ble2/Middlewares/ST/BlueNRG-2/hci/bluenrg1_hci_le.c \
+ C:/Users/jingchen.fan/demo/Bluetooth_demo/Middlewares/ST/BlueNRG-2/hci/bluenrg1_hci_le.c \
  ../../../../../../Middlewares/ST/BlueNRG-2/includes/ble_types.h \
  ../../../../../../Middlewares/ST/BlueNRG-2/includes/bluenrg1_hci_le.h \
  ../../../../../../Middlewares/ST/BlueNRG-2/includes/ble_types.h \

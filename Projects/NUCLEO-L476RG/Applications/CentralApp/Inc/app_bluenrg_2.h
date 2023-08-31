@@ -27,29 +27,15 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32l4xx_nucleo.h"
 
-/* USER CODE BEGIN Includes */
 
-/* USER CODE END Includes */
+#define BLUENRG2_DEV_NAME   "LUMEN-BLE_Device"
+#define BLUENRG2_DEV_NAME_LEN  ( sizeof( BLUENRG2_DEV_NAME ) )
 
-/* Exported Defines ----------------------------------------------------------*/
 
-/* USER CODE BEGIN ED */
+void BLUENRG2_vInit(void);
+void BLUENRG2_vProcess(void);
 
-/* USER CODE END ED */
 
-/* Exported Variables --------------------------------------------------------*/
-
-/* USER CODE BEGIN EV */
-
-/* USER CODE END EV */
-
-/* Exported Functions Prototypes ---------------------------------------------*/
-void MX_BlueNRG_2_Init(void);
-void MX_BlueNRG_2_Process(void);
-
-/* USER CODE BEGIN EFP */
-
-/* USER CODE END EFP */
 
 #ifdef __cplusplus
 }

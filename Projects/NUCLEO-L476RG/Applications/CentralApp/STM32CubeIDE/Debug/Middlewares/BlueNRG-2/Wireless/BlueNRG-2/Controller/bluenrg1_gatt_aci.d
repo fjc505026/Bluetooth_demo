@@ -1,5 +1,5 @@
 Middlewares/BlueNRG-2/Wireless/BlueNRG-2/Controller/bluenrg1_gatt_aci.o: \
- C:/Users/Jingchen\ Fan/Desktop/en.x-cube-ble2/Middlewares/ST/BlueNRG-2/hci/controller/bluenrg1_gatt_aci.c \
+ C:/Users/jingchen.fan/demo/Bluetooth_demo/Middlewares/ST/BlueNRG-2/hci/controller/bluenrg1_gatt_aci.c \
  ../../../../../../Middlewares/ST/BlueNRG-2/includes/ble_types.h \
  ../../../../../../Middlewares/ST/BlueNRG-2/includes/bluenrg1_gatt_aci.h \
  ../../../../../../Middlewares/ST/BlueNRG-2/includes/bluenrg1_types.h \

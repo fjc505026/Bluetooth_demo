@@ -1,5 +1,5 @@
 Middlewares/BlueNRG-2/Wireless/BlueNRG-2/HCI_TL/Basic/hci_tl.o: \
- C:/Users/Jingchen\ Fan/Desktop/en.x-cube-ble2/Middlewares/ST/BlueNRG-2/hci/hci_tl_patterns/Basic/hci_tl.c \
+ C:/Users/jingchen.fan/demo/Bluetooth_demo/Middlewares/ST/BlueNRG-2/hci/hci_tl_patterns/Basic/hci_tl.c \
  ../../../../../../Middlewares/ST/BlueNRG-2/includes/hci_const.h \
  ../../../../../../Middlewares/ST/BlueNRG-2/includes/compiler.h \
  ../../../../../../Middlewares/ST/BlueNRG-2/includes/link_layer.h \
@@ -52,7 +52,7 @@ Middlewares/BlueNRG-2/Wireless/BlueNRG-2/HCI_TL/Basic/hci_tl.o: \
  ../../../../../../Middlewares/ST/BlueNRG-2/includes/link_layer.h \
  ../../../../../../Middlewares/ST/BlueNRG-2/includes/bluenrg1_gatt_server.h \
  ../../../../../../Middlewares/ST/BlueNRG-2/includes/sm.h \
- C:/Users/Jingchen\ Fan/Desktop/en.x-cube-ble2/Middlewares/ST/BlueNRG-2/hci/hci_tl_patterns/Basic/hci_tl.h
+ C:/Users/jingchen.fan/demo/Bluetooth_demo/Middlewares/ST/BlueNRG-2/hci/hci_tl_patterns/Basic/hci_tl.h
 ../../../../../../Middlewares/ST/BlueNRG-2/includes/hci_const.h:
 ../../../../../../Middlewares/ST/BlueNRG-2/includes/compiler.h:
 ../../../../../../Middlewares/ST/BlueNRG-2/includes/link_layer.h:
@@ -106,4 +106,4 @@ Middlewares/BlueNRG-2/Wireless/BlueNRG-2/HCI_TL/Basic/hci_tl.o: \
 ../../../../../../Middlewares/ST/BlueNRG-2/includes/link_layer.h:
 ../../../../../../Middlewares/ST/BlueNRG-2/includes/bluenrg1_gatt_server.h:
 ../../../../../../Middlewares/ST/BlueNRG-2/includes/sm.h:
-C:/Users/Jingchen\ Fan/Desktop/en.x-cube-ble2/Middlewares/ST/BlueNRG-2/hci/hci_tl_patterns/Basic/hci_tl.h:
+C:/Users/jingchen.fan/demo/Bluetooth_demo/Middlewares/ST/BlueNRG-2/hci/hci_tl_patterns/Basic/hci_tl.h:

@@ -35,7 +35,7 @@
 #define CHAR_VALUE_LENGTH 63
 #define CLIENT_MAX_MTU_SIZE 158
 
-tBleStatus Add_Sample_Service(void);
+uint8_t GATT_DB_u8AddService(void);
 void APP_UserEvtRx(void *pData);
 
 extern uint16_t sampleServHandle, TXCharHandle, RXCharHandle;

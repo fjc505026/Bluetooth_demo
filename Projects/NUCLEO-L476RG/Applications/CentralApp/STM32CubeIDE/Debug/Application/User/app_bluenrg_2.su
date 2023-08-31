@@ -1,24 +1,24 @@
-C:/Users/Jingchen Fan/Desktop/en.x-cube-ble2/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/app_bluenrg_2.c:123:6:MX_BlueNRG_2_Init	16	static
-C:/Users/Jingchen Fan/Desktop/en.x-cube-ble2/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/app_bluenrg_2.c:148:6:MX_BlueNRG_2_Process	8	static
-C:/Users/Jingchen Fan/Desktop/en.x-cube-ble2/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/app_bluenrg_2.c:162:13:sendData	48	static
-C:/Users/Jingchen Fan/Desktop/en.x-cube-ble2/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/app_bluenrg_2.c:199:13:receiveData	16	static
-C:/Users/Jingchen Fan/Desktop/en.x-cube-ble2/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/app_bluenrg_2.c:223:13:Reset_DiscoveryContext	16	static
-C:/Users/Jingchen Fan/Desktop/en.x-cube-ble2/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/app_bluenrg_2.c:251:13:Setup_DeviceAddress	32	static
-C:/Users/Jingchen Fan/Desktop/en.x-cube-ble2/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/app_bluenrg_2.c:300:16:Find_DeviceName	24	static
-C:/Users/Jingchen Fan/Desktop/en.x-cube-ble2/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/app_bluenrg_2.c:340:13:Attribute_Modified_CB	16	static
-C:/Users/Jingchen Fan/Desktop/en.x-cube-ble2/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/app_bluenrg_2.c:361:16:CentralAppInit	24	static
-C:/Users/Jingchen Fan/Desktop/en.x-cube-ble2/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/app_bluenrg_2.c:417:13:User_Init	8	static
-C:/Users/Jingchen Fan/Desktop/en.x-cube-ble2/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/app_bluenrg_2.c:431:13:Connection_StateMachine	48	static
-C:/Users/Jingchen Fan/Desktop/en.x-cube-ble2/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/app_bluenrg_2.c:591:13:APP__vUpdateDetectRange	48	static
-C:/Users/Jingchen Fan/Desktop/en.x-cube-ble2/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/app_bluenrg_2.c:644:13:APP__vLEDHanlder	16	static
-C:/Users/Jingchen Fan/Desktop/en.x-cube-ble2/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/app_bluenrg_2.c:710:13:User_Process	72	static
-C:/Users/Jingchen Fan/Desktop/en.x-cube-ble2/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/app_bluenrg_2.c:841:6:aci_gap_proc_complete_event	16	static
-C:/Users/Jingchen Fan/Desktop/en.x-cube-ble2/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/app_bluenrg_2.c:877:6:hci_le_connection_complete_event	32	static
-C:/Users/Jingchen Fan/Desktop/en.x-cube-ble2/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/app_bluenrg_2.c:918:6:hci_disconnection_complete_event	16	static
-C:/Users/Jingchen Fan/Desktop/en.x-cube-ble2/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/app_bluenrg_2.c:948:6:hci_le_advertising_report_event	32	static
-C:/Users/Jingchen Fan/Desktop/en.x-cube-ble2/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/app_bluenrg_2.c:994:6:aci_gatt_attribute_modified_event	24	static
-C:/Users/Jingchen Fan/Desktop/en.x-cube-ble2/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/app_bluenrg_2.c:1010:6:aci_gatt_notification_event	24	static
-C:/Users/Jingchen Fan/Desktop/en.x-cube-ble2/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/app_bluenrg_2.c:1028:6:aci_gatt_disc_read_char_by_uuid_resp_event	24	static
-C:/Users/Jingchen Fan/Desktop/en.x-cube-ble2/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/app_bluenrg_2.c:1064:6:aci_gatt_proc_complete_event	16	static
-C:/Users/Jingchen Fan/Desktop/en.x-cube-ble2/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/app_bluenrg_2.c:1087:6:aci_gatt_tx_pool_available_event	16	static
-C:/Users/Jingchen Fan/Desktop/en.x-cube-ble2/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/app_bluenrg_2.c:1100:6:aci_att_exchange_mtu_resp_event	16	static
+C:/Users/jingchen.fan/demo/Bluetooth_demo/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/app_bluenrg_2.c:111:6:BLUENRG2_vInit	8	static
+C:/Users/jingchen.fan/demo/Bluetooth_demo/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/app_bluenrg_2.c:134:6:BLUENRG2_vProcess	8	static
+C:/Users/jingchen.fan/demo/Bluetooth_demo/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/app_bluenrg_2.c:148:13:sendData	48	static
+C:/Users/jingchen.fan/demo/Bluetooth_demo/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/app_bluenrg_2.c:187:13:receiveData	16	static
+C:/Users/jingchen.fan/demo/Bluetooth_demo/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/app_bluenrg_2.c:210:13:BLUENRG2__vResetDiscoveryContext	16	static
+C:/Users/jingchen.fan/demo/Bluetooth_demo/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/app_bluenrg_2.c:240:16:BLUENRG2__u8PrintBLEFwInfo	96	static
+C:/Users/jingchen.fan/demo/Bluetooth_demo/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/app_bluenrg_2.c:279:16:BLUENRG2__u8FindDeviceName	32	static
+C:/Users/jingchen.fan/demo/Bluetooth_demo/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/app_bluenrg_2.c:324:13:BLUENRG2__vAttributeModifiedCB	16	static
+C:/Users/jingchen.fan/demo/Bluetooth_demo/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/app_bluenrg_2.c:345:16:BLUENRG2__u8CentralAppInit	64	static
+C:/Users/jingchen.fan/demo/Bluetooth_demo/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/app_bluenrg_2.c:429:13:BLUENRG2__vUserInit	8	static
+C:/Users/jingchen.fan/demo/Bluetooth_demo/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/app_bluenrg_2.c:443:13:Connection_StateMachine	48	static
+C:/Users/jingchen.fan/demo/Bluetooth_demo/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/app_bluenrg_2.c:600:13:APP__vUpdateDetectRange	48	static
+C:/Users/jingchen.fan/demo/Bluetooth_demo/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/app_bluenrg_2.c:652:13:APP__vLEDHanlder	16	static
+C:/Users/jingchen.fan/demo/Bluetooth_demo/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/app_bluenrg_2.c:722:13:BLUENRG2__vUserProcess	72	static
+C:/Users/jingchen.fan/demo/Bluetooth_demo/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/app_bluenrg_2.c:850:6:aci_gap_proc_complete_event	16	static
+C:/Users/jingchen.fan/demo/Bluetooth_demo/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/app_bluenrg_2.c:883:6:hci_le_connection_complete_event	32	static
+C:/Users/jingchen.fan/demo/Bluetooth_demo/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/app_bluenrg_2.c:924:6:hci_disconnection_complete_event	16	static
+C:/Users/jingchen.fan/demo/Bluetooth_demo/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/app_bluenrg_2.c:951:6:hci_le_advertising_report_event	32	static
+C:/Users/jingchen.fan/demo/Bluetooth_demo/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/app_bluenrg_2.c:995:6:aci_gatt_attribute_modified_event	24	static
+C:/Users/jingchen.fan/demo/Bluetooth_demo/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/app_bluenrg_2.c:1008:6:aci_gatt_notification_event	24	static
+C:/Users/jingchen.fan/demo/Bluetooth_demo/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/app_bluenrg_2.c:1026:6:aci_gatt_disc_read_char_by_uuid_resp_event	24	static
+C:/Users/jingchen.fan/demo/Bluetooth_demo/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/app_bluenrg_2.c:1062:6:aci_gatt_proc_complete_event	16	static
+C:/Users/jingchen.fan/demo/Bluetooth_demo/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/app_bluenrg_2.c:1084:6:aci_gatt_tx_pool_available_event	16	static
+C:/Users/jingchen.fan/demo/Bluetooth_demo/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/app_bluenrg_2.c:1096:6:aci_att_exchange_mtu_resp_event	16	static

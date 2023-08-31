@@ -30,15 +30,13 @@ int main(void)
 
   HAL_Init();
   SystemClock_Config();
-
   MX_GPIO_Init();
-  MX_BlueNRG_2_Init();
-
- 
+  
+  BLUENRG2_vInit();
 
   while (1)
   {
-    MX_BlueNRG_2_Process();
+    BLUENRG2_vProcess();
   }
 }
 

@@ -20,6 +20,8 @@
 #include "bluenrg1_aci.h"
 #include "bluenrg1_hci_le.h"
 
+ #define GATT_DB_CUSTOM_UUID_BYTE_NUM ( 16U )
+
 #define COPY_UUID_128(uuid_struct, uuid_15, uuid_14, uuid_13, uuid_12, uuid_11, uuid_10, uuid_9, uuid_8, uuid_7, uuid_6, uuid_5, uuid_4, uuid_3, uuid_2, uuid_1, uuid_0) \
   do {\
   	uuid_struct.uuid128[0] = uuid_0; uuid_struct.uuid128[1] = uuid_1; uuid_struct.uuid128[2] = uuid_2; uuid_struct.uuid128[3] = uuid_3; \
@@ -30,17 +32,13 @@
 
 uint16_t sampleServHandle, TXCharHandle, RXCharHandle;
 
-/* UUIDs */
-Service_UUID_t service_uuid;
-Char_UUID_t char_uuid;
-
 /*******************************************************************************
 * Function Name  : Add_Sample_Service
 * Description    : Add the 'Accelerometer' service.
 * Input          : None
 * Return         : Status.
 *******************************************************************************/
-uint8_t Add_Sample_Service(void)
+uint8_t GATT_DB_u8AddService( void )
 {
   uint8_t ret;
   /**
@@ -57,22 +55,26 @@ uint8_t Add_Sample_Service(void)
   D973F2E2-B19E-11E2-9E96-0800200C9A66
   */
 
-  const uint8_t uuid[16] = {0x66,0x9a,0x0c,0x20,0x00,0x08,0x96,0x9e,0xe2,0x11,0x9e,0xb1,0xe0,0xf2,0x73,0xd9};
-  const uint8_t charUuidTX[16] = {0x66,0x9a,0x0c,0x20,0x00,0x08,0x96,0x9e,0xe2,0x11,0x9e,0xb1,0xe1,0xf2,0x73,0xd9};
-  const uint8_t charUuidRX[16] = {0x66,0x9a,0x0c,0x20,0x00,0x08,0x96,0x9e,0xe2,0x11,0x9e,0xb1,0xe2,0xf2,0x73,0xd9};
+  const uint8_t cu8ServiceUUID[GATT_DB_CUSTOM_UUID_BYTE_NUM] = {0x66,0x9a,0x0c,0x20,0x00,0x08,0x96,0x9e,0xe2,0x11,0x9e,0xb1,0xe0,0xf2,0x73,0xd9};
+  const uint8_t cu8CharUUIDTx[GATT_DB_CUSTOM_UUID_BYTE_NUM] = {0x66,0x9a,0x0c,0x20,0x00,0x08,0x96,0x9e,0xe2,0x11,0x9e,0xb1,0xe1,0xf2,0x73,0xd9};
+  const uint8_t cu8CharUUIDRx[GATT_DB_CUSTOM_UUID_BYTE_NUM] = {0x66,0x9a,0x0c,0x20,0x00,0x08,0x96,0x9e,0xe2,0x11,0x9e,0xb1,0xe2,0xf2,0x73,0xd9};
 
-  BLUENRG_memcpy(&service_uuid.Service_UUID_128, uuid, 16);
 
-  ret = aci_gatt_add_service(UUID_TYPE_128, &service_uuid, PRIMARY_SERVICE, max_attribute_records, &sampleServHandle);
+  Service_UUID_t  unTempServiceUUID;
+  Char_UUID_t unTempCharUUID;
+
+  BLUENRG_memcpy(&unTempServiceUUID.Service_UUID_128, cu8ServiceUUID, GATT_DB_CUSTOM_UUID_BYTE_NUM);
+
+  ret = aci_gatt_add_service(UUID_TYPE_128, &unTempServiceUUID, PRIMARY_SERVICE, max_attribute_records, &sampleServHandle);
   if (ret != BLE_STATUS_SUCCESS) goto fail;
 
-  BLUENRG_memcpy(&char_uuid.Char_UUID_128, charUuidTX, 16);
-  ret =  aci_gatt_add_char(sampleServHandle, UUID_TYPE_128, &char_uuid, CHAR_VALUE_LENGTH, CHAR_PROP_NOTIFY, ATTR_PERMISSION_NONE, 0,
+  BLUENRG_memcpy(&unTempCharUUID.Char_UUID_128, cu8CharUUIDTx, GATT_DB_CUSTOM_UUID_BYTE_NUM);
+  ret =  aci_gatt_add_char(sampleServHandle, UUID_TYPE_128, &unTempCharUUID, CHAR_VALUE_LENGTH, CHAR_PROP_NOTIFY, ATTR_PERMISSION_NONE, 0,
                 16, 1, &TXCharHandle);
   if (ret != BLE_STATUS_SUCCESS) goto fail;
 
-  BLUENRG_memcpy(&char_uuid.Char_UUID_128, charUuidRX, 16);
-  ret =  aci_gatt_add_char(sampleServHandle, UUID_TYPE_128, &char_uuid, CHAR_VALUE_LENGTH, CHAR_PROP_WRITE|CHAR_PROP_WRITE_WITHOUT_RESP, ATTR_PERMISSION_NONE, GATT_NOTIFY_ATTRIBUTE_WRITE,
+  BLUENRG_memcpy(&unTempCharUUID.Char_UUID_128, cu8CharUUIDRx, GATT_DB_CUSTOM_UUID_BYTE_NUM);
+  ret =  aci_gatt_add_char(sampleServHandle, UUID_TYPE_128, &unTempCharUUID, CHAR_VALUE_LENGTH, CHAR_PROP_WRITE|CHAR_PROP_WRITE_WITHOUT_RESP, ATTR_PERMISSION_NONE, GATT_NOTIFY_ATTRIBUTE_WRITE,
                 16, 1, &RXCharHandle);
   if (ret != BLE_STATUS_SUCCESS) goto fail;
 

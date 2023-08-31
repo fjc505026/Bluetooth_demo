@@ -1,5 +1,5 @@
 Middlewares/BlueNRG-2/Wireless/BlueNRG-2/HCI_TL/Basic/bluenrg1_events_cb.o: \
- C:/Users/Jingchen\ Fan/Desktop/en.x-cube-ble2/Middlewares/ST/BlueNRG-2/hci/bluenrg1_events_cb.c \
+ C:/Users/jingchen.fan/demo/Bluetooth_demo/Middlewares/ST/BlueNRG-2/hci/bluenrg1_events_cb.c \
  ../../../../../../Middlewares/ST/BlueNRG-2/includes/compiler.h \
  ../../../../../../Middlewares/ST/BlueNRG-2/includes/bluenrg1_events.h \
  ../../../../../../Middlewares/ST/BlueNRG-2/includes/compiler.h \
