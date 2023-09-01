@@ -78,6 +78,7 @@ typedef enum
     BLUENRG2_STAT_GET_REMOTE_RX,
     BLUENRG2_STAT_FORCE_REMOTE_TX_NOTIFY,
     BLUENRG2_STAT_MAIN_CONNECTED,
+    BLUENRG2_STAT_GET_MTU_SZ,
     BLUENRG2_STAT_IDLE,
 } BLUENRG2_tenState;
 
@@ -104,6 +105,8 @@ typedef struct
 
     uint16_t u16Handle;
     uint8_t  u8Role;
+
+    uint16_t u16MaxWriteLen;
 
     BLUENRG2_tstCharContext RemoteTx;
     BLUENRG2_tstCharContext RemoteRx;
@@ -137,10 +140,6 @@ static bool BLUENRG2__bRemoteTxNotifyEnabled = false;
 static bool BLUENRG2__bMasterDevIsUnlocked   = false;
 
 static uint8_t BLUENRG2__au8DataBuf[CHAR_VALUE_LENGTH - 3];
-
-uint8_t  mtu_exchanged      = 0;
-uint8_t  mtu_exchanged_wait = 0;
-uint16_t write_char_len     = CHAR_VALUE_LENGTH - 3;
 
 //*******************************************************************************
 //                       Private function prototypes
@@ -492,6 +491,19 @@ static void BLUENRG2__vUserProcess( void )
         }
         break;
 
+        case BLUENRG2_STAT_GET_MTU_SZ:
+        {
+            uint8_t u8Ret = aci_gatt_exchange_config( BLUENRG2__stConnCTX.u16Handle );
+
+            if( u8Ret != BLE_STATUS_SUCCESS )
+            {
+                PRINT_DBG( "aci_gatt_exchange_config()failed, %02X\r\n", u8Ret );
+            }
+
+            BLUENRG2__enState = BLUENRG2_STAT_FORCE_REMOTE_TX_NOTIFY;
+        }
+        break;
+
         case BLUENRG2_STAT_FORCE_REMOTE_TX_NOTIFY:
         {
 
@@ -571,12 +583,15 @@ static void BLUENRG2__vUserProcess( void )
 static void BLUENRG2__vReceiveData( uint8_t *pu8Data, uint8_t u8DataLen_Byte )
 {
 
-    // PRINT_DBG("[RX]:");
-    // for(int i = 0; i < u8DataLen_Byte; i++)
-    // {
-    //   PRINT_DBG("%d", pu8Data[i]);
-    // }
-    // fflush(stdout);
+    // #ifdef BLUENRG2_PRINT_ON
+
+    // #endif
+    PRINT_DBG( "[RX]:" );
+    for( int i = 0; i < u8DataLen_Byte; i++ )
+    {
+        PRINT_DBG( "%d", pu8Data[i] );
+    }
+    fflush( stdout );
 
     if( 1U == pu8Data[0] )
     {
@@ -678,6 +693,8 @@ static void BLUENRG2__vResetConnectionContext( void )
     BSP_LED_On( LED2 );
     BLUENRG_memset( &BLUENRG2__stConnCTX, 0, sizeof( BLUENRG2__stConnCTX ) );
 
+    BLUENRG2__stConnCTX.u16MaxWriteLen = CHAR_VALUE_LENGTH - 3U;
+
     BLUENRG2__stConnCTX.RemoteTx.bValid = false;
     BLUENRG_memcpy( BLUENRG2__stConnCTX.RemoteTx.uUUID.UUID_128, BLUENRG2__cau8RemoteTxCharUUID,
                     sizeof( BLUENRG2__cau8RemoteTxCharUUID ) );
@@ -692,10 +709,6 @@ static void BLUENRG2__vResetConnectionContext( void )
 
     BLUENRG2__st8Queue.bValid = false;
     BLUENRG2__st8Queue.u8Idx  = 0U;
-
-    mtu_exchanged      = 0;
-    mtu_exchanged_wait = 0;
-    write_char_len     = CHAR_VALUE_LENGTH - 3;
 
     for( uint16_t i = 0; i < ( CHAR_VALUE_LENGTH - 3 ); i++ )
     {
@@ -1093,7 +1106,7 @@ void aci_gatt_proc_complete_event( uint16_t Connection_Handle, uint8_t Error_Cod
         {
             if( !BLUENRG2__bRemoteTxNotifyEnabled )
             {
-                BLUENRG2__enState = BLUENRG2_STAT_FORCE_REMOTE_TX_NOTIFY;
+                BLUENRG2__enState = BLUENRG2_STAT_GET_MTU_SZ; //BLUENRG2_STAT_FORCE_REMOTE_TX_NOTIFY;
             }
         }
     }
@@ -1118,24 +1131,11 @@ void aci_att_exchange_mtu_resp_event( uint16_t Connection_Handle, uint16_t Serve
 
     if( Server_RX_MTU <= CLIENT_MAX_MTU_SIZE )
     {
-        write_char_len = Server_RX_MTU - 3;
+        BLUENRG2__stConnCTX.u16MaxWriteLen = Server_RX_MTU - 3U;
     }
     else
     {
-        write_char_len = CLIENT_MAX_MTU_SIZE - 3;
+        BLUENRG2__stConnCTX.u16MaxWriteLen = CLIENT_MAX_MTU_SIZE - 3U;
     }
-
-    if( ( mtu_exchanged_wait == 0 ) || ( ( mtu_exchanged_wait == 1 ) ) )
-    {
-        /**
-         * The aci_att_exchange_mtu_resp_event is received also if the
-         * aci_gatt_exchange_config is called by the other peer.
-         * Here we manage this case.
-         */
-        if( mtu_exchanged_wait == 0 )
-        {
-            mtu_exchanged_wait = 2;
-        }
-        mtu_exchanged = 1;
-    }
+    BLUENRG2__enState = BLUENRG2_STAT_FORCE_REMOTE_TX_NOTIFY; // BLUENRG2_STAT_MAIN_CONNECTED;
 }
