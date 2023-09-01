@@ -29,6 +29,8 @@
 #include "hci_tl.h"
 #include "gatt_db.h"
 
+// #define BLUENRG2_PRINT_ON
+
 #define BLUENRG2_AUTHENTICATION_PASS_KEY ( 123456U )
 #define BLUENRG2_FSM_GENERIC_TIMEOUT_MS  ( 60 * 1000U )
 
@@ -392,8 +394,10 @@ static uint8_t BLUENRG2__u8CentralAppInit( void )
 //*****************************************************
 static void BLUENRG2__vUserProcess( void )
 {
-    static uint32_t          u32LastRSSIReadTick;
-    static uint32_t          u32CurrentFSMStartTick;
+    static uint32_t u32LastRSSIReadTick;
+    static uint32_t u32CurrentFSMStartTick;
+
+#ifdef BLUENRG2_PRINT_ON
     static BLUENRG2_tenState enLastFSMState;
 
     if( enLastFSMState != BLUENRG2__enState )
@@ -401,6 +405,7 @@ static void BLUENRG2__vUserProcess( void )
         PRINT_DBG( "FSM : %d -> %d \r\n", enLastFSMState, BLUENRG2__enState );
         enLastFSMState = BLUENRG2__enState;
     }
+#endif // BLUENRG2_PRINT_ON
 
     switch( BLUENRG2__enState )
     {
@@ -832,6 +837,7 @@ static void BLUENRG2__vUpdateLockStatus( int8_t i8Rssi, int8_t i8LockRssiTh, boo
             {
                 BLUENRG2__bMasterDevIsUnlocked = false;
             }
+
             PRINT_DBG( "[RSSI] raw %d dBm\r\n", i8Rssi );
         }
         else
@@ -840,7 +846,9 @@ static void BLUENRG2__vUpdateLockStatus( int8_t i8Rssi, int8_t i8LockRssiTh, boo
 
             if( ( i8ProcessedRssi = BLUENRG2__i8GetProcessedRSSI( i8Rssi ) ) && BLUENRG2__bIsProcessedRSSIValid() )
             {
+#ifdef BLUENRG2_PRINT_ON
                 PRINT_DBG( "[RSSI] raw %d dBm, cali %d dBm\r\n", i8Rssi, i8ProcessedRssi );
+#endif // BLUENRG2_PRINT_ON
                 if( i8ProcessedRssi >= i8LockRssiTh )
                 {
                     BLUENRG2__bMasterDevIsUnlocked = true;
