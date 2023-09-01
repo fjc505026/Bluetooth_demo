@@ -1,0 +1,15 @@
+C:/Users/jingchen.fan/demo/Bluetooth_demo/Projects/NUCLEO-L476RG/Applications/Central/Src/app_bluenrg_2.c:145:6:MX_BlueNRG_2_Init	2
+C:/Users/jingchen.fan/demo/Bluetooth_demo/Projects/NUCLEO-L476RG/Applications/Central/Src/app_bluenrg_2.c:188:6:MX_BlueNRG_2_Process	1
+C:/Users/jingchen.fan/demo/Bluetooth_demo/Projects/NUCLEO-L476RG/Applications/Central/Src/app_bluenrg_2.c:208:13:User_Init	1
+C:/Users/jingchen.fan/demo/Bluetooth_demo/Projects/NUCLEO-L476RG/Applications/Central/Src/app_bluenrg_2.c:220:13:User_Process	2
+C:/Users/jingchen.fan/demo/Bluetooth_demo/Projects/NUCLEO-L476RG/Applications/Central/Src/app_bluenrg_2.c:235:6:Get_Action	35
+C:/Users/jingchen.fan/demo/Bluetooth_demo/Projects/NUCLEO-L476RG/Applications/Central/Src/app_bluenrg_2.c:380:6:Central_Process	14
+C:/Users/jingchen.fan/demo/Bluetooth_demo/Projects/NUCLEO-L476RG/Applications/Central/Src/app_bluenrg_2.c:473:6:aci_gap_proc_complete_event	3
+C:/Users/jingchen.fan/demo/Bluetooth_demo/Projects/NUCLEO-L476RG/Applications/Central/Src/app_bluenrg_2.c:502:6:aci_gatt_proc_complete_event	8
+C:/Users/jingchen.fan/demo/Bluetooth_demo/Projects/NUCLEO-L476RG/Applications/Central/Src/app_bluenrg_2.c:565:6:hci_le_connection_complete_event	1
+C:/Users/jingchen.fan/demo/Bluetooth_demo/Projects/NUCLEO-L476RG/Applications/Central/Src/app_bluenrg_2.c:601:6:hci_disconnection_complete_event	2
+C:/Users/jingchen.fan/demo/Bluetooth_demo/Projects/NUCLEO-L476RG/Applications/Central/Src/app_bluenrg_2.c:641:6:hci_le_advertising_report_event	9
+C:/Users/jingchen.fan/demo/Bluetooth_demo/Projects/NUCLEO-L476RG/Applications/Central/Src/app_bluenrg_2.c:697:6:aci_att_read_by_group_type_resp_event	10
+C:/Users/jingchen.fan/demo/Bluetooth_demo/Projects/NUCLEO-L476RG/Applications/Central/Src/app_bluenrg_2.c:789:6:aci_att_read_by_type_resp_event	25
+C:/Users/jingchen.fan/demo/Bluetooth_demo/Projects/NUCLEO-L476RG/Applications/Central/Src/app_bluenrg_2.c:966:6:aci_att_read_resp_event	4
+C:/Users/jingchen.fan/demo/Bluetooth_demo/Projects/NUCLEO-L476RG/Applications/Central/Src/app_bluenrg_2.c:992:6:aci_gatt_notification_event	4

@@ -30,8 +30,7 @@
 	uuid_struct.uuid128[12] = uuid_12; uuid_struct.uuid128[13] = uuid_13; uuid_struct.uuid128[14] = uuid_14; uuid_struct.uuid128[15] = uuid_15; \
 	}while(0)
 
-uint16_t sampleServHandle, TXCharHandle, RXCharHandle;
-
+uint16_t u16LocalServHandle, u16LocalTxCharHandle,u16LocalRxCharHandle;
 /*******************************************************************************
 * Function Name  : Add_Sample_Service
 * Description    : Add the 'Accelerometer' service.
@@ -65,20 +64,20 @@ uint8_t GATT_DB_u8AddService( void )
 
   BLUENRG_memcpy(&unTempServiceUUID.Service_UUID_128, cu8ServiceUUID, GATT_DB_CUSTOM_UUID_BYTE_NUM);
 
-  ret = aci_gatt_add_service(UUID_TYPE_128, &unTempServiceUUID, PRIMARY_SERVICE, max_attribute_records, &sampleServHandle);
+  ret = aci_gatt_add_service(UUID_TYPE_128, &unTempServiceUUID, PRIMARY_SERVICE, max_attribute_records, &u16LocalServHandle);
   if (ret != BLE_STATUS_SUCCESS) goto fail;
 
   BLUENRG_memcpy(&unTempCharUUID.Char_UUID_128, cu8CharUUIDTx, GATT_DB_CUSTOM_UUID_BYTE_NUM);
-  ret =  aci_gatt_add_char(sampleServHandle, UUID_TYPE_128, &unTempCharUUID, CHAR_VALUE_LENGTH, CHAR_PROP_NOTIFY, ATTR_PERMISSION_NONE, 0,
-                16, 1, &TXCharHandle);
+  ret =  aci_gatt_add_char(u16LocalServHandle, UUID_TYPE_128, &unTempCharUUID, CHAR_VALUE_LENGTH, CHAR_PROP_NOTIFY, ATTR_PERMISSION_NONE, 0,
+                16, 1, &u16LocalTxCharHandle);
   if (ret != BLE_STATUS_SUCCESS) goto fail;
 
   BLUENRG_memcpy(&unTempCharUUID.Char_UUID_128, cu8CharUUIDRx, GATT_DB_CUSTOM_UUID_BYTE_NUM);
-  ret =  aci_gatt_add_char(sampleServHandle, UUID_TYPE_128, &unTempCharUUID, CHAR_VALUE_LENGTH, CHAR_PROP_WRITE|CHAR_PROP_WRITE_WITHOUT_RESP, ATTR_PERMISSION_NONE, GATT_NOTIFY_ATTRIBUTE_WRITE,
-                16, 1, &RXCharHandle);
+  ret =  aci_gatt_add_char(u16LocalServHandle, UUID_TYPE_128, &unTempCharUUID, CHAR_VALUE_LENGTH, CHAR_PROP_WRITE|CHAR_PROP_WRITE_WITHOUT_RESP, ATTR_PERMISSION_NONE, GATT_NOTIFY_ATTRIBUTE_WRITE,
+                16, 1, &u16LocalRxCharHandle);
   if (ret != BLE_STATUS_SUCCESS) goto fail;
 
-  PRINT_DBG("Sample Service added.\r\nTX Char Handle %04X, RX Char Handle %04X\r\n", TXCharHandle, RXCharHandle);
+  PRINT_DBG("Sample Service added.\r\nTX Char Handle %04X, RX Char Handle %04X\r\n", u16LocalTxCharHandle, u16LocalRxCharHandle);
   return BLE_STATUS_SUCCESS;
 
 fail:

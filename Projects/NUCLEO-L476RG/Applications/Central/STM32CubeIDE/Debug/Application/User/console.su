@@ -1,0 +1,4 @@
+C:/Users/jingchen.fan/demo/Bluetooth_demo/Projects/NUCLEO-L476RG/Applications/Central/Src/console.c:43:5:Uart_Receive_Char	16	static
+C:/Users/jingchen.fan/demo/Bluetooth_demo/Projects/NUCLEO-L476RG/Applications/Central/Src/console.c:64:5:Uart_Receive_Char_Timeout	24	static
+C:/Users/jingchen.fan/demo/Bluetooth_demo/Projects/NUCLEO-L476RG/Applications/Central/Src/console.c:83:6:Main_Menu	8	static
+C:/Users/jingchen.fan/demo/Bluetooth_demo/Projects/NUCLEO-L476RG/Applications/Central/Src/console.c:128:9:Get_Value	24	static

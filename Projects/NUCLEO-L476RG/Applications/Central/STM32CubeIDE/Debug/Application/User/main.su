@@ -1,0 +1,4 @@
+C:/Users/jingchen.fan/demo/Bluetooth_demo/Projects/NUCLEO-L476RG/Applications/Central/Src/main.c:64:5:main	8	static
+C:/Users/jingchen.fan/demo/Bluetooth_demo/Projects/NUCLEO-L476RG/Applications/Central/Src/main.c:109:6:SystemClock_Config	96	static
+C:/Users/jingchen.fan/demo/Bluetooth_demo/Projects/NUCLEO-L476RG/Applications/Central/Src/main.c:159:13:MX_GPIO_Init	48	static
+C:/Users/jingchen.fan/demo/Bluetooth_demo/Projects/NUCLEO-L476RG/Applications/Central/Src/main.c:205:6:Error_Handler	4	static,ignoring_inline_asm

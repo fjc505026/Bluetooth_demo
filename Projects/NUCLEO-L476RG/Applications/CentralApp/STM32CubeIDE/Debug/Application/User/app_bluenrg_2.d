@@ -34,7 +34,6 @@ Application/User/app_bluenrg_2.o: \
  ../../../../../../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_uart_ex.h \
  ../../Inc/stm32l4xx_nucleo_errno.h ../../Inc/main.h \
  ../../Inc/hci_tl_interface.h ../../Inc/stm32l4xx_nucleo_bus.h \
- ../../Inc/app_state.h \
  ../../../../../../Middlewares/ST/BlueNRG-2/includes/bluenrg1_aci.h \
  ../../../../../../Middlewares/ST/BlueNRG-2/includes/bluenrg1_gap_aci.h \
  ../../../../../../Middlewares/ST/BlueNRG-2/includes/bluenrg1_types.h \
@@ -99,7 +98,6 @@ Application/User/app_bluenrg_2.o: \
 ../../Inc/main.h:
 ../../Inc/hci_tl_interface.h:
 ../../Inc/stm32l4xx_nucleo_bus.h:
-../../Inc/app_state.h:
 ../../../../../../Middlewares/ST/BlueNRG-2/includes/bluenrg1_aci.h:
 ../../../../../../Middlewares/ST/BlueNRG-2/includes/bluenrg1_gap_aci.h:
 ../../../../../../Middlewares/ST/BlueNRG-2/includes/bluenrg1_types.h:
