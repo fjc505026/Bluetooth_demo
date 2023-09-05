@@ -29,7 +29,7 @@
 #include "hci_tl.h"
 #include "gatt_db.h"
 
-// #define BLUENRG2_PRINT_ON
+#define BLUENRG2_PRINT_ON
 
 #define BLUENRG2_AUTHENTICATION_PASS_KEY ( 123456U )
 #define BLUENRG2_FSM_GENERIC_TIMEOUT_MS  ( 60 * 1000U )
@@ -67,6 +67,9 @@
 #define BLUENRG2_GENERIC_HANDLE_MIN ( 0x0001U )
 #define BLUENRG2_GENERIC_HANDLE_MAX ( 0xFFFFU )
 
+// Address in ROM config offset
+#define BLUENRG2_PUB_ADDR_OFFSET  CONFIG_DATA_PUBADDR_OFFSET
+#define BLUENRG2_SROM_ADDR_OFFSET ( 0x80U )
 typedef enum
 {
     BLUENRG2_STAT_INIT = 0U, //  Reset variables, Start scan
@@ -74,9 +77,9 @@ typedef enum
     BLUENRG2_STAT_SCAN_DONE,
     BLUENRG2_STAT_START_CONNECT,
     BLUENRG2_STAT_CONNECTING,
-    BLUENRG2_STAT_GET_REMOTE_TX,
-    BLUENRG2_STAT_GET_REMOTE_RX,
-    BLUENRG2_STAT_FORCE_REMOTE_TX_NOTIFY,
+    BLUENRG2_STAT_GET_REMOTE_TX,          // NOT IN USE
+    BLUENRG2_STAT_GET_REMOTE_RX,          // NOT IN USE
+    BLUENRG2_STAT_FORCE_REMOTE_TX_NOTIFY, // NOT IN USE
     BLUENRG2_STAT_MAIN_CONNECTED,
     BLUENRG2_STAT_IDLE,
 } BLUENRG2_tenState;
@@ -111,7 +114,7 @@ typedef struct
     BLUENRG2_tstDeviceInfo stDevice;
 } BLUENRG2_tstConnectionContext;
 
-extern uint16_t u16LocalTxCharHandle, u16LocalRxCharHandle;
+extern uint16_t u16LocalNormalWriteCharHandle, u16LocalEncryptedWriteCharHandle, u16LocalAuthenWriteCharHandle;
 
 static const uint8_t BLUENRG2__cau8RemoteTxCharUUID[] = { 0x66, 0x9a, 0x0c, 0x20, 0x00, 0x08, 0x96, 0x9e,
                                                           0xe2, 0x11, 0x9e, 0xb1, 0xe1, 0xf2, 0x73, 0xd9 };
@@ -130,11 +133,10 @@ static BLUENRG2_tenState BLUENRG2__enState = BLUENRG2_STAT_INIT;
 
 static BLUENRG2_tstConnectionContext BLUENRG2__stConnCTX = { 0 };
 
-static uint32_t BLUENRG2__u32RxDataCnt = 0U;
-
-static bool BLUENRG2__bTXbufferFull          = false;
-static bool BLUENRG2__bRemoteTxNotifyEnabled = false;
-static bool BLUENRG2__bMasterDevIsUnlocked   = false;
+static bool BLUENRG2__bTXbufferFull            = false;
+static bool BLUENRG2__bRemoteTxNotifyEnabled   = false;
+static bool BLUENRG2__bMasterDevIsUnlocked     = false;
+static bool BLUENRG2__bMasterEncryptedUnlocked = false;
 
 static uint8_t BLUENRG2__au8DataBuf[CHAR_VALUE_LENGTH - 3];
 
@@ -190,7 +192,7 @@ static void sendData( uint8_t *data_buffer, uint8_t Nb_bytes ) // CAN BE REMOVED
 
     // if( BLUENRG2__stConnCTX.u8Role == SLAVE_ROLE )
     // {
-    //     while( aci_gatt_update_char_value_ext( BLUENRG2__stConnCTX.u16Handle, sampleServHandle, u16LocalTxCharHandle, 1,
+    //     while( aci_gatt_update_char_value_ext( BLUENRG2__stConnCTX.u16Handle, sampleServHandle, u16LocalNormalWriteCharHandle, 1,
     //                                            Nb_bytes, 0, Nb_bytes,
     //                                            data_buffer ) == BLE_STATUS_INSUFFICIENT_RESOURCES )
     //     {
@@ -291,12 +293,10 @@ static void BLUENRG2__vUserInit( void )
 //*****************************************************
 static uint8_t BLUENRG2__u8CentralAppInit( void )
 {
-    uint8_t  u8Ret;
-    uint16_t u16ServiceHandle, u16DevNameCharHandle, u16AppearanceCharHandle;
-    uint8_t  au8BdAddr[BLUENRG2_BDADDR_BYTE_NUM];
-    uint8_t  u8BaAddrLen;
-
-    const uint8_t cu8NVMConfigDataAddr = 0x80U; // Offset of the static random address stored in NVM
+    uint8_t       u8Ret;
+    uint16_t      u16ServiceHandle, u16DevNameCharHandle, u16AppearanceCharHandle;
+    uint8_t       au8BdAddr[BLUENRG2_BDADDR_BYTE_NUM] = { 0x01, 0x02, 0x03, 0xBE, 0xEF, 0xFF };
+    const uint8_t cu8BaAddrLen                        = (uint8_t) BLUENRG2_BDADDR_BYTE_NUM;
 
     hci_reset(); // Sw reset of the BLE chip
 
@@ -310,7 +310,7 @@ static uint8_t BLUENRG2__u8CentralAppInit( void )
         return u8Ret;
     }
 
-    u8Ret = aci_hal_read_config_data( cu8NVMConfigDataAddr, &u8BaAddrLen, au8BdAddr );
+    u8Ret = aci_hal_write_config_data( BLUENRG2_PUB_ADDR_OFFSET, cu8BaAddrLen, au8BdAddr );
 
     if( ( u8Ret != BLE_STATUS_SUCCESS ) || ( 0xC0 != ( au8BdAddr[5U] & 0xC0 ) ) )
     {
@@ -359,7 +359,7 @@ static uint8_t BLUENRG2__u8CentralAppInit( void )
 
     // BLE Security v4.2 is supported: BLE stack FW version >= 2.x (new API prototype)
     // clang-format off
-    u8Ret = aci_gap_set_authentication_requirement( BONDING, MITM_PROTECTION_REQUIRED, SC_IS_SUPPORTED,
+    u8Ret = aci_gap_set_authentication_requirement( BONDING, MITM_PROTECTION_NOT_REQUIRED, SC_IS_SUPPORTED,
                                                     KEYPRESS_IS_NOT_SUPPORTED, 7, 16, USE_FIXED_PIN_FOR_PAIRING,
                                                     BLUENRG2_AUTHENTICATION_PASS_KEY, BLUENRG2_AUTHENTICATION_ADDR_PUBLIC_ID );
     // clang-format on
@@ -495,21 +495,21 @@ static void BLUENRG2__vUserProcess( void )
         case BLUENRG2_STAT_FORCE_REMOTE_TX_NOTIFY:
         {
 
-            uint8_t au8ClientCharConfigData[] = { 0x01, 0x00 }; // Enable notifications
+            // uint8_t au8ClientCharConfigData[] = { 0x01, 0x00 }; // Enable notifications
 
-            u32CurrentFSMStartTick = HAL_GetTick();
-            while( aci_gatt_write_char_desc( BLUENRG2__stConnCTX.u16Handle,
-                                             BLUENRG2__stConnCTX.RemoteTx.u16Handle + BLUENRG2_CHAR_CONFIG_DESC_OFFSET,
-                                             sizeof( au8ClientCharConfigData ),
-                                             au8ClientCharConfigData ) == BLE_STATUS_NOT_ALLOWED )
-            {
-                // Radio is busy.
-                if( ( HAL_GetTick() - u32CurrentFSMStartTick ) > ( 10 * HCI_DEFAULT_TIMEOUT_MS ) )
-                    break;
-            }
+            // u32CurrentFSMStartTick = HAL_GetTick();
+            // while( aci_gatt_write_char_desc( BLUENRG2__stConnCTX.u16Handle,
+            //                                  BLUENRG2__stConnCTX.RemoteTx.u16Handle + BLUENRG2_CHAR_CONFIG_DESC_OFFSET,
+            //                                  sizeof( au8ClientCharConfigData ),
+            //                                  au8ClientCharConfigData ) == BLE_STATUS_NOT_ALLOWED )
+            // {
+            //     // Radio is busy.
+            //     if( ( HAL_GetTick() - u32CurrentFSMStartTick ) > ( 10 * HCI_DEFAULT_TIMEOUT_MS ) )
+            //         break;
+            // }
             BLUENRG2__bRemoteTxNotifyEnabled = true;
 
-            BLUENRG2__enState = BLUENRG2_STAT_MAIN_CONNECTED;
+            // BLUENRG2__enState = BLUENRG2_STAT_MAIN_CONNECTED;
         }
         break;
 
@@ -524,8 +524,13 @@ static void BLUENRG2__vUserProcess( void )
                 u32LastRSSIReadTick = HAL_GetTick();
             }
 
-            if( BLUENRG2__bMasterDevIsUnlocked )
+            static bool bLockStatus     = false;
+            static bool bLastLockStatus = false;
+
+            if( BLUENRG2__bMasterDevIsUnlocked && BLUENRG2__bMasterEncryptedUnlocked )
             {
+                bLockStatus = true;
+
                 if( 1U == BSP_PB_GetState( BUTTON_KEY ) )
                 {
                     BSP_LED_Off( LED2 );
@@ -537,7 +542,14 @@ static void BLUENRG2__vUserProcess( void )
             }
             else
             {
+                bLockStatus = false;
                 BSP_LED_On( LED2 );
+            }
+
+            if( bLockStatus != bLastLockStatus )
+            {
+                PRINT_DBG( "Current is %s\r\n", bLockStatus ? "UNLOCKED!" : "LOCKED!" );
+                bLastLockStatus = bLockStatus;
             }
         }
         break;
@@ -577,12 +589,6 @@ static void BLUENRG2__vReceiveData( uint8_t *pu8Data, uint8_t u8DataLen_Byte )
     //   PRINT_DBG("%d", pu8Data[i]);
     // }
     // fflush(stdout);
-
-    if( 1U == pu8Data[0] )
-    {
-        BLUENRG2__u32RxDataCnt++;
-        PRINT_DBG( "[RX] Notified\r\n" );
-    }
 }
 
 //*****************************************************
@@ -600,7 +606,7 @@ static void BLUENRG2__vReceiveData( uint8_t *pu8Data, uint8_t u8DataLen_Byte )
 //*****************************************************
 static void BLUENRG2__vStartScan( void )
 {
-    uint8_t u8Ret = aci_gap_start_general_discovery_proc( SCAN_P, SCAN_L, PUBLIC_ADDR, 0x00 );
+    uint8_t u8Ret = aci_gap_start_general_discovery_proc( SCAN_P, SCAN_L, PUBLIC_ADDR, 0x01 );
     if( BLE_STATUS_SUCCESS != u8Ret )
     {
         printf( "aci_gap_start_general_discovery_proc() failed, %#X\n", u8Ret );
@@ -686,9 +692,10 @@ static void BLUENRG2__vResetConnectionContext( void )
     BLUENRG_memcpy( BLUENRG2__stConnCTX.RemoteRx.uUUID.UUID_128, BLUENRG2__cau8RemoteRxCharUUID,
                     sizeof( BLUENRG2__cau8RemoteRxCharUUID ) );
 
-    BLUENRG2__bRemoteTxNotifyEnabled = false;
-    BLUENRG2__bTXbufferFull          = false;
-    BLUENRG2__bMasterDevIsUnlocked   = false;
+    BLUENRG2__bRemoteTxNotifyEnabled   = false;
+    BLUENRG2__bTXbufferFull            = false;
+    BLUENRG2__bMasterDevIsUnlocked     = false;
+    BLUENRG2__bMasterEncryptedUnlocked = false;
 
     BLUENRG2__st8Queue.bValid = false;
     BLUENRG2__st8Queue.u8Idx  = 0U;
@@ -798,16 +805,30 @@ static bool BLUENRG2__bFindDeviceName( uint8_t u8DataLen, uint8_t *pu8Data )
  *******************************************************************************/
 static void BLUENRG2__vAttributeModifiedCB( uint16_t u16AttributeHandle, uint8_t u8DataLen, uint8_t *pau8AttrData )
 {
-    if( u16AttributeHandle == u16LocalRxCharHandle + BLUENRG2_CHAR_VALUE_OFFSET )
+    if( u16AttributeHandle == u16LocalNormalWriteCharHandle + BLUENRG2_CHAR_VALUE_OFFSET )
     {
-        BLUENRG2__vReceiveData( pau8AttrData, u8DataLen );
+        PRINT_DBG( "[RX] Normal write\r\n" ); //BLUENRG2__vReceiveData( pau8AttrData, u8DataLen );
     }
-    else if( u16AttributeHandle == u16LocalTxCharHandle + BLUENRG2_CHAR_CONFIG_DESC_OFFSET )
+    else if( u16AttributeHandle == u16LocalEncryptedWriteCharHandle + BLUENRG2_CHAR_VALUE_OFFSET )
+    {
+        PRINT_DBG( "[RX] Encrypted write\r\n" ); //BLUENRG2__vReceiveData( pau8AttrData, u8DataLen );
+    }
+    else if( u16AttributeHandle == u16LocalAuthenWriteCharHandle + BLUENRG2_CHAR_VALUE_OFFSET )
+    {
+        PRINT_DBG( "[RX] Authenticated write\r\n" ); //BLUENRG2__vReceiveData( pau8AttrData, u8DataLen );
+    }
+    else if( u16AttributeHandle == u16LocalNormalWriteCharHandle + BLUENRG2_CHAR_CONFIG_DESC_OFFSET )
     {
         if( pau8AttrData[0] == 0x01 )
         {
             BLUENRG2__bRemoteTxNotifyEnabled = true;
         }
+    }
+    else if( u16AttributeHandle == u16LocalEncryptedWriteCharHandle + BLUENRG2_CHAR_CONFIG_DESC_OFFSET )
+    {
+    }
+    else if( u16AttributeHandle == u16LocalAuthenWriteCharHandle + BLUENRG2_CHAR_CONFIG_DESC_OFFSET )
+    {
     }
 }
 
@@ -823,7 +844,7 @@ static void BLUENRG2__vAttributeModifiedCB( uint16_t u16AttributeHandle, uint8_t
 //*****************************************************
 static void BLUENRG2__vUpdateLockStatus( int8_t i8Rssi, int8_t i8LockRssiTh, bool bDebounceEnable )
 {
-    static bool bLastLockState = false;
+    //static bool bLastLockState = false;
 
     if( i8Rssi != BLUENRG2_RSSI_INVALID_VALUE )
     {
@@ -861,11 +882,11 @@ static void BLUENRG2__vUpdateLockStatus( int8_t i8Rssi, int8_t i8LockRssiTh, boo
         }
     }
 
-    if( bLastLockState != BLUENRG2__bMasterDevIsUnlocked )
-    {
-        bLastLockState = BLUENRG2__bMasterDevIsUnlocked;
-        PRINT_DBG( "%s !!! \r\n", BLUENRG2__bMasterDevIsUnlocked ? "UNLOCKED" : "LOCKED" );
-    }
+    // if( bLastLockState != BLUENRG2__bMasterDevIsUnlocked )
+    // {
+    //     bLastLockState = BLUENRG2__bMasterDevIsUnlocked;
+    //     PRINT_DBG( "%s !!! \r\n", BLUENRG2__bMasterDevIsUnlocked ? "UNLOCKED" : "LOCKED" );
+    // }
 }
 
 static int8_t BLUENRG2__i8GetProcessedRSSI( int8_t i8RSSIVal )
@@ -949,7 +970,7 @@ void hci_le_connection_complete_event( uint8_t  Status,
 
     if( BLUENRG2__stConnCTX.u8Role == BLUENRG2_MASTER_ROLE )
     {
-        BLUENRG2__enState = BLUENRG2_STAT_GET_REMOTE_TX;
+        BLUENRG2__enState = BLUENRG2_STAT_MAIN_CONNECTED;
     }
     else
     {
@@ -1043,10 +1064,10 @@ void aci_gatt_notification_event( uint16_t Connection_Handle,
                                   uint8_t  Attribute_Value_Length,
                                   uint8_t  Attribute_Value[] )
 {
-    if( Attribute_Handle == BLUENRG2__stConnCTX.RemoteTx.u16Handle + BLUENRG2_CHAR_VALUE_OFFSET )
-    {
-        BLUENRG2__vReceiveData( Attribute_Value, Attribute_Value_Length );
-    }
+    // if( Attribute_Handle == BLUENRG2__stConnCTX.RemoteTx.u16Handle + BLUENRG2_CHAR_VALUE_OFFSET )
+    // {
+    //     BLUENRG2__vReceiveData( Attribute_Value, Attribute_Value_Length );
+    // }
 }
 
 //*****************************************************
@@ -1138,4 +1159,26 @@ void aci_att_exchange_mtu_resp_event( uint16_t Connection_Handle, uint16_t Serve
         }
         mtu_exchanged = 1;
     }
+}
+
+//*****************************************************
+//! \brief  GAP PAIRING complete event
+//!
+//*****************************************************
+void aci_gap_pairing_complete_event( uint16_t connection_handle, uint8_t status, uint8_t reason )
+{
+    if( status == 0x02 )
+    { //Pairing Failed
+        PRINT_DBG( "aci_gap_pairing_complete_event failed:0x%02x with reason 0x%02x\r\n", status, reason );
+    }
+    else
+    {
+        BLUENRG2__bMasterEncryptedUnlocked = true;
+        PRINT_DBG( "aci_gap_pairing_complete_event with status 0x%02x\r\n Pairing succeed!!!", status );
+    }
+}
+
+void hci_encryption_change_event( uint8_t status, uint16_t connection_handle, uint8_t encryption_enabled )
+{
+    PRINT_DBG( "hci_encryption_change_event, Link Encrypted %s\r\n", encryption_enabled ? "SUCCESS" : "FAILED" );
 }
