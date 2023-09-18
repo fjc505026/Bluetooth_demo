@@ -126,8 +126,6 @@ static BLUENRG2_tenState BLUENRG2__enState = BLUENRG2_STAT_INIT;
 
 static BLUENRG2_tstConnectionContext BLUENRG2__stConnCTX = { 0 };
 
-static uint32_t BLUENRG2__u32RxDataCnt = 0U;
-
 // Lock/unlocked threshold
 static int8_t BLUENRG2__i8RssiThreshold = BLUENRG2_RSSI_THRESHOLD_FAR;
 
@@ -831,8 +829,8 @@ static void BLUENRG2__vUpdateLockStatus( int8_t i8Rssi,  bool bDebounceEnable )
             {
                 PRINT_DBG( "[RSSI] raw %d dBm, cali %d dBm\r\n", i8Rssi, i8ProcessedRssi );
                 uint8_t u8DecimalValue[ 2 ];
-                u8DecimalValue[ 0 ] =  (uint8_t)abs(i8Rssi / 10);
-                u8DecimalValue[ 1 ] =  (uint8_t)abs(i8Rssi % 10);
+                u8DecimalValue[ 0 ] =  (uint8_t)abs(i8ProcessedRssi / 10);
+                u8DecimalValue[ 1 ] =  (uint8_t)abs(i8ProcessedRssi % 10);
 
                 BLUENRG2__vSendData( u8DecimalValue, sizeof(u8DecimalValue) );
                 if( i8ProcessedRssi >= BLUENRG2__i8RssiThreshold )

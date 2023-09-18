@@ -33,19 +33,19 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY, DEBUGGING, OCTETS
  14 .debug_line_str 0000009b  00000000  00000000  0003dafe  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 15 .debug_info   0001e56f  00000000  00000000  0003db99  2**0
+ 15 .debug_info   0001e55e  00000000  00000000  0003db99  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 16 .debug_abbrev 000039a4  00000000  00000000  0005c108  2**0
+ 16 .debug_abbrev 000039a4  00000000  00000000  0005c0f7  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 17 .debug_aranges 00001888  00000000  00000000  0005fab0  2**3
+ 17 .debug_aranges 00001888  00000000  00000000  0005faa0  2**3
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 18 .debug_str    000fba31  00000000  00000000  00061338  2**0
+ 18 .debug_str    000fba1a  00000000  00000000  00061328  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 19 .debug_rnglists 00001314  00000000  00000000  0015cd69  2**0
+ 19 .debug_rnglists 00001314  00000000  00000000  0015cd42  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 20 .debug_macro  0002b3de  00000000  00000000  0015e07d  2**0
+ 20 .debug_macro  0002b3de  00000000  00000000  0015e056  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 21 .debug_frame  0000704c  00000000  00000000  0018945c  2**2
+ 21 .debug_frame  0000704c  00000000  00000000  00189434  2**2
                   CONTENTS, READONLY, DEBUGGING, OCTETS
 
 Disassembly of section .text:
@@ -1449,7 +1449,7 @@ static void BLUENRG2__vReceiveData( uint8_t *pu8Data, uint8_t u8DataLen_Byte )
  8000b84:	4a0b      	ldr	r2, [pc, #44]	; (8000bb4 <BLUENRG2__vReceiveData+0xb0>)
  8000b86:	7bbb      	ldrb	r3, [r7, #14]
  8000b88:	7013      	strb	r3, [r2, #0]
-                printf("New Threshold set to %d \r\n ", BLUENRG2__i8RssiThreshold );
+                printf("New Threshold set to %d \r\n", BLUENRG2__i8RssiThreshold );
  8000b8a:	4b0a      	ldr	r3, [pc, #40]	; (8000bb4 <BLUENRG2__vReceiveData+0xb0>)
  8000b8c:	f993 3000 	ldrsb.w	r3, [r3]
  8000b90:	4619      	mov	r1, r3
@@ -2164,8 +2164,8 @@ static void BLUENRG2__vUpdateLockStatus( int8_t i8Rssi,  bool bDebounceEnable )
  8001014:	482b      	ldr	r0, [pc, #172]	; (80010c4 <BLUENRG2__vUpdateLockStatus+0x128>)
  8001016:	f007 fddf 	bl	8008bd8 <iprintf>
                 uint8_t u8DecimalValue[ 2 ];
-                u8DecimalValue[ 0 ] =  (uint8_t)abs(i8Rssi / 10);
- 800101a:	f997 3007 	ldrsb.w	r3, [r7, #7]
+                u8DecimalValue[ 0 ] =  (uint8_t)abs(i8ProcessedRssi / 10);
+ 800101a:	f997 300f 	ldrsb.w	r3, [r7, #15]
  800101e:	4a2a      	ldr	r2, [pc, #168]	; (80010c8 <BLUENRG2__vUpdateLockStatus+0x12c>)
  8001020:	fb82 1203 	smull	r1, r2, r2, r3
  8001024:	1092      	asrs	r2, r2, #2
@@ -2177,8 +2177,8 @@ static void BLUENRG2__vUpdateLockStatus( int8_t i8Rssi,  bool bDebounceEnable )
  8001030:	425b      	neglt	r3, r3
  8001032:	b2db      	uxtb	r3, r3
  8001034:	733b      	strb	r3, [r7, #12]
-                u8DecimalValue[ 1 ] =  (uint8_t)abs(i8Rssi % 10);
- 8001036:	f997 2007 	ldrsb.w	r2, [r7, #7]
+                u8DecimalValue[ 1 ] =  (uint8_t)abs(i8ProcessedRssi % 10);
+ 8001036:	f997 200f 	ldrsb.w	r2, [r7, #15]
  800103a:	4b23      	ldr	r3, [pc, #140]	; (80010c8 <BLUENRG2__vUpdateLockStatus+0x12c>)
  800103c:	fb83 1302 	smull	r1, r3, r3, r2
  8001040:	1099      	asrs	r1, r3, #2
