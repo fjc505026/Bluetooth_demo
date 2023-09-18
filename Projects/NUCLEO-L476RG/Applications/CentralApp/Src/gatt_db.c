@@ -20,15 +20,13 @@
 #include "bluenrg1_aci.h"
 #include "bluenrg1_hci_le.h"
 
- #define GATT_DB_CUSTOM_UUID_BYTE_NUM ( 16U )
-
-#define COPY_UUID_128(uuid_struct, uuid_15, uuid_14, uuid_13, uuid_12, uuid_11, uuid_10, uuid_9, uuid_8, uuid_7, uuid_6, uuid_5, uuid_4, uuid_3, uuid_2, uuid_1, uuid_0) \
-  do {\
-  	uuid_struct.uuid128[0] = uuid_0; uuid_struct.uuid128[1] = uuid_1; uuid_struct.uuid128[2] = uuid_2; uuid_struct.uuid128[3] = uuid_3; \
-	uuid_struct.uuid128[4] = uuid_4; uuid_struct.uuid128[5] = uuid_5; uuid_struct.uuid128[6] = uuid_6; uuid_struct.uuid128[7] = uuid_7; \
-	uuid_struct.uuid128[8] = uuid_8; uuid_struct.uuid128[9] = uuid_9; uuid_struct.uuid128[10] = uuid_10; uuid_struct.uuid128[11] = uuid_11; \
-	uuid_struct.uuid128[12] = uuid_12; uuid_struct.uuid128[13] = uuid_13; uuid_struct.uuid128[14] = uuid_14; uuid_struct.uuid128[15] = uuid_15; \
-	}while(0)
+// #define COPY_UUID_128(uuid_struct, uuid_15, uuid_14, uuid_13, uuid_12, uuid_11, uuid_10, uuid_9, uuid_8, uuid_7, uuid_6, uuid_5, uuid_4, uuid_3, uuid_2, uuid_1, uuid_0) \
+//   do {\
+//   	uuid_struct.uuid128[0] = uuid_0; uuid_struct.uuid128[1] = uuid_1; uuid_struct.uuid128[2] = uuid_2; uuid_struct.uuid128[3] = uuid_3; \
+// 	uuid_struct.uuid128[4] = uuid_4; uuid_struct.uuid128[5] = uuid_5; uuid_struct.uuid128[6] = uuid_6; uuid_struct.uuid128[7] = uuid_7; \
+// 	uuid_struct.uuid128[8] = uuid_8; uuid_struct.uuid128[9] = uuid_9; uuid_struct.uuid128[10] = uuid_10; uuid_struct.uuid128[11] = uuid_11; \
+// 	uuid_struct.uuid128[12] = uuid_12; uuid_struct.uuid128[13] = uuid_13; uuid_struct.uuid128[14] = uuid_14; uuid_struct.uuid128[15] = uuid_15; \
+// 	}while(0)
 
 uint16_t u16LocalServHandle, u16LocalTxCharHandle,u16LocalRxCharHandle;
 /*******************************************************************************
@@ -47,18 +45,10 @@ uint8_t GATT_DB_u8AddService( void )
    */
   uint8_t max_attribute_records = 1+3+2;
 
-  /*
-  UUIDs:
-  D973F2E0-B19E-11E2-9E96-0800200C9A66
-  D973F2E1-B19E-11E2-9E96-0800200C9A66
-  D973F2E2-B19E-11E2-9E96-0800200C9A66
-  */
-
-  const uint8_t cu8ServiceUUID[GATT_DB_CUSTOM_UUID_BYTE_NUM] = {0x66,0x9a,0x0c,0x20,0x00,0x08,0x96,0x9e,0xe2,0x11,0x9e,0xb1,0xe0,0xf2,0x73,0xd9};
-  const uint8_t cu8CharUUIDTx[GATT_DB_CUSTOM_UUID_BYTE_NUM] = {0x66,0x9a,0x0c,0x20,0x00,0x08,0x96,0x9e,0xe2,0x11,0x9e,0xb1,0xe1,0xf2,0x73,0xd9};
-  const uint8_t cu8CharUUIDRx[GATT_DB_CUSTOM_UUID_BYTE_NUM] = {0x66,0x9a,0x0c,0x20,0x00,0x08,0x96,0x9e,0xe2,0x11,0x9e,0xb1,0xe2,0xf2,0x73,0xd9};
-
-
+  const uint8_t cu8ServiceUUID[GATT_DB_CUSTOM_UUID_BYTE_NUM] = GATT_DB_CONTROL_UUID;
+  const uint8_t cu8CharUUIDTx[GATT_DB_CUSTOM_UUID_BYTE_NUM]  = GATT_DB_LOCAL_TX_UUID;
+  const uint8_t cu8CharUUIDRx[GATT_DB_CUSTOM_UUID_BYTE_NUM]  = GATT_DB_LOCAL_RX_UUID;
+  
   Service_UUID_t  unTempServiceUUID;
   Char_UUID_t unTempCharUUID;
 
@@ -68,7 +58,7 @@ uint8_t GATT_DB_u8AddService( void )
   if (ret != BLE_STATUS_SUCCESS) goto fail;
 
   BLUENRG_memcpy(&unTempCharUUID.Char_UUID_128, cu8CharUUIDTx, GATT_DB_CUSTOM_UUID_BYTE_NUM);
-  ret =  aci_gatt_add_char(u16LocalServHandle, UUID_TYPE_128, &unTempCharUUID, CHAR_VALUE_LENGTH, CHAR_PROP_NOTIFY, ATTR_PERMISSION_NONE, 0,
+  ret =  aci_gatt_add_char(u16LocalServHandle, UUID_TYPE_128, &unTempCharUUID, CHAR_VALUE_LENGTH, CHAR_PROP_NOTIFY|CHAR_PROP_READ, ATTR_PERMISSION_NONE, 0,
                 16, 1, &u16LocalTxCharHandle);
   if (ret != BLE_STATUS_SUCCESS) goto fail;
 

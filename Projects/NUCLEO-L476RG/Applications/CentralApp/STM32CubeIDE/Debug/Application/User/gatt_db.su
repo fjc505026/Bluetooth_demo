@@ -1,2 +1,2 @@
-C:/Users/jingchen.fan/demo/Bluetooth_demo/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/gatt_db.c:40:9:GATT_DB_u8AddService	128	static
-C:/Users/jingchen.fan/demo/Bluetooth_demo/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/gatt_db.c:88:6:APP_UserEvtRx	40	static
+C:/Users/jingchen.fan/demo/Bluetooth_demo/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/gatt_db.c:38:9:GATT_DB_u8AddService	128	static
+C:/Users/jingchen.fan/demo/Bluetooth_demo/Projects/NUCLEO-L476RG/Applications/CentralApp/Src/gatt_db.c:78:6:APP_UserEvtRx	40	static

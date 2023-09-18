@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <ctype.h>
 
 #include "bluenrg1_aci.h"
 #include "bluenrg1_hci_le.h"
@@ -35,7 +36,7 @@
 //RSSI
 #define BLUENRG2_Q_SZ                ( 5U )   // in byte
 #define BLUENRG2_RSSI_READING_PERIOD ( 500U ) // in ms, Read RSSI Value every 0.5 sec
-#define BLUENRG2_RSSI_THRESHOLD_FAR  ( -85 )  // in dBm, ~3M
+#define BLUENRG2_RSSI_THRESHOLD_FAR  ( -100 )  // in dBm, >~5M
 #define BLUENRG2_RSSI_THRESHOLD_MID  ( -75 )  // in dBm,~1M
 #define BLUENRG2_RSSI_THRESHOLD_NEAR ( -65 )  // in dBm, ~0.5M
 #define BLUENRG2_RSSI_INVALID_VALUE  ( 127 )
@@ -68,8 +69,7 @@
 typedef enum
 {
     BLUENRG2_STAT_INIT = 0U, //  Reset variables, Start scan
-    BLUENRG2_STAT_SCANNING,
-    BLUENRG2_STAT_SCAN_DONE,
+    BLUENRG2_SCANNING,
     BLUENRG2_STAT_START_CONNECT,
     BLUENRG2_STAT_CONNECTING,
     BLUENRG2_STAT_GET_REMOTE_TX,
@@ -111,11 +111,9 @@ typedef struct
 
 extern uint16_t u16LocalTxCharHandle, u16LocalRxCharHandle;
 
-static const uint8_t BLUENRG2__cau8RemoteTxCharUUID[] = { 0x66, 0x9a, 0x0c, 0x20, 0x00, 0x08, 0x96, 0x9e,
-                                                          0xe2, 0x11, 0x9e, 0xb1, 0xe1, 0xf2, 0x73, 0xd9 };
+static const uint8_t BLUENRG2__cau8RemoteTxCharUUID[] = GATT_DB_LOCAL_TX_UUID;
 
-static const uint8_t BLUENRG2__cau8RemoteRxCharUUID[] = { 0x66, 0x9a, 0x0c, 0x20, 0x00, 0x08, 0x96, 0x9e,
-                                                          0xe2, 0x11, 0x9e, 0xb1, 0xe2, 0xf2, 0x73, 0xd9 };
+static const uint8_t BLUENRG2__cau8RemoteRxCharUUID[] = GATT_DB_LOCAL_RX_UUID;
 
 static struct
 {
@@ -130,15 +128,18 @@ static BLUENRG2_tstConnectionContext BLUENRG2__stConnCTX = { 0 };
 
 static uint32_t BLUENRG2__u32RxDataCnt = 0U;
 
+// Lock/unlocked threshold
+static int8_t BLUENRG2__i8RssiThreshold = BLUENRG2_RSSI_THRESHOLD_FAR;
+
 static bool BLUENRG2__bTXbufferFull          = false;
 static bool BLUENRG2__bRemoteTxNotifyEnabled = false;
 static bool BLUENRG2__bMasterDevIsUnlocked   = false;
 
 static uint8_t BLUENRG2__au8DataBuf[CHAR_VALUE_LENGTH - 3];
 
-uint8_t  mtu_exchanged      = 0;
-uint8_t  mtu_exchanged_wait = 0;
-uint16_t write_char_len     = CHAR_VALUE_LENGTH - 3;
+static uint8_t  BLUENRG2__u8MTUExchanged     = 0U;
+static uint8_t  BLUENRG2__u8MTUExchangedWait = 0U;
+static uint16_t BLUENRG2__u16WriteCharLen    = (uint16_t) CHAR_VALUE_LENGTH - (uint16_t) 3U;
 
 //*******************************************************************************
 //                       Private function prototypes
@@ -157,7 +158,7 @@ static void    BLUENRG2__vResetConnectionContext( void );
 static uint8_t BLUENRG2__u8PrintBLEFwInfo( void );
 static bool    BLUENRG2__bFindDeviceName( uint8_t u8DataLen, uint8_t *pu8Data );
 
-static void BLUENRG2__vUpdateLockStatus( int8_t i8Rssi, int8_t i8LockRssiTh, bool bDebounceEnable );
+static void BLUENRG2__vUpdateLockStatus( int8_t i8Rssi, bool bDebounceEnable );
 static void BLUENRG2__vAttributeModifiedCB( uint16_t u16AttributeHandle, uint8_t u8DataLen, uint8_t *pau8AttrData );
 
 static int8_t BLUENRG2__i8GetProcessedRSSI( int8_t i8RSSIVal );
@@ -171,13 +172,15 @@ static bool   BLUENRG2__bIsProcessedRSSIValid( void );
 //! \return
 //!   None
 //*****************************************************
-static void sendData( uint8_t *data_buffer, uint8_t Nb_bytes ) // CAN BE REMOVED
+static void BLUENRG2__vSendData( uint8_t *data_buffer, uint8_t Nb_bytes ) 
 {
     uint32_t U32Tickstart = HAL_GetTick();
 
-    while( BLE_STATUS_NOT_ALLOWED ==
-           aci_gatt_write_without_resp( BLUENRG2__stConnCTX.u16Handle,
-                                        BLUENRG2__stConnCTX.RemoteRx.u16Handle + BLUENRG2_CHAR_VALUE_OFFSET, Nb_bytes,
+    // printf("Send data %d %d to Char Handle %#X \r\n", data_buffer[0],data_buffer[1],BLUENRG2__stConnCTX.RemoteRx.u16Handle );
+
+    while( BLE_STATUS_NOT_ALLOWED == aci_gatt_write_without_resp( BLUENRG2__stConnCTX.u16Handle,
+                                        BLUENRG2__stConnCTX.RemoteRx.u16Handle + BLUENRG2_CHAR_VALUE_OFFSET, 
+                                        Nb_bytes,
                                         data_buffer ) )
     {
         hci_user_evt_proc();
@@ -186,22 +189,6 @@ static void sendData( uint8_t *data_buffer, uint8_t Nb_bytes ) // CAN BE REMOVED
             break;
     }
 
-    // if( BLUENRG2__stConnCTX.u8Role == SLAVE_ROLE )
-    // {
-    //     while( aci_gatt_update_char_value_ext( BLUENRG2__stConnCTX.u16Handle, sampleServHandle, u16LocalTxCharHandle, 1,
-    //                                            Nb_bytes, 0, Nb_bytes,
-    //                                            data_buffer ) == BLE_STATUS_INSUFFICIENT_RESOURCES )
-    //     {
-    //         BLUENRG2__bTXbufferFull = true;
-    //         while( BLUENRG2__bTXbufferFull )
-    //         {
-    //             hci_user_evt_proc();
-    //             // Radio is busy (buffer full).
-    //             if( ( HAL_GetTick() - tickstart ) > ( 10 * HCI_DEFAULT_TIMEOUT_MS ) )
-    //                 break;
-    //         }
-    //     }
-    // }
 }
 
 //*******************************************************************************
@@ -318,7 +305,7 @@ static uint8_t BLUENRG2__u8CentralAppInit( void )
         return u8Ret;
     }
 
-    aci_hal_set_tx_power_level( BLUENRG2_TX_POWER_HIGH, BLUENRG2_TX_POWER_N2_DBM );
+    aci_hal_set_tx_power_level( BLUENRG2_TX_POWER_HIGH, BLUENRG2_TX_POWER_8_DBM );
 
     u8Ret = aci_gatt_init();
     if( u8Ret != BLE_STATUS_SUCCESS )
@@ -408,27 +395,21 @@ static void BLUENRG2__vUserProcess( void )
         {
             BLUENRG2__vResetConnectionContext(); // Reset Connection context
             BLUENRG2__vStartScan();              // Result in hci_le_advertising_report_event
-            BLUENRG2__enState      = BLUENRG2_STAT_SCANNING;
+            BLUENRG2__enState      = BLUENRG2_SCANNING;
             u32CurrentFSMStartTick = HAL_GetTick();
         }
         break;
 
-        case BLUENRG2_STAT_SCANNING:
+        case BLUENRG2_SCANNING:
         {
+            // aci_gap_proc_complete_event() if no dev found, will reset to BLUENRG2_STAT_INIT
             if( HAL_GetTick() - u32CurrentFSMStartTick > BLUENRG2_FSM_GENERIC_TIMEOUT_MS )
             {
-                PRINT_DBG( "Timeout at STATE %d \r\n ", (uint8_t) BLUENRG2__enState );
+                PRINT_DBG( "Timeout at STATE %d \r\n ", (uint8_t) BLUENRG2__enState ); // current can't reach here
                 BLUENRG2__vStopScan();
                 u32CurrentFSMStartTick = HAL_GetTick();
                 BLUENRG2__enState      = BLUENRG2_STAT_IDLE;
             }
-        }
-        break;
-
-        case BLUENRG2_STAT_SCAN_DONE:
-        {
-            BLUENRG2__vStopScan();
-            BLUENRG2__enState = BLUENRG2_STAT_IDLE;
         }
         break;
 
@@ -515,7 +496,7 @@ static void BLUENRG2__vUserProcess( void )
             {
                 int8_t u8TmpRssi;
                 hci_read_rssi( BLUENRG2__stConnCTX.u16Handle, &u8TmpRssi );
-                BLUENRG2__vUpdateLockStatus( u8TmpRssi, BLUENRG2_RSSI_THRESHOLD_NEAR, true );
+                BLUENRG2__vUpdateLockStatus( u8TmpRssi, true );
                 u32LastRSSIReadTick = HAL_GetTick();
             }
 
@@ -565,19 +546,27 @@ static void BLUENRG2__vUserProcess( void )
 //*****************************************************
 static void BLUENRG2__vReceiveData( uint8_t *pu8Data, uint8_t u8DataLen_Byte )
 {
+   static int8_t i8LastValidRssiThreshold = INT8_MIN;
 
-    // PRINT_DBG("[RX]:");
-    // for(int i = 0; i < u8DataLen_Byte; i++)
-    // {
-    //   PRINT_DBG("%d", pu8Data[i]);
-    // }
-    // fflush(stdout);
+    if ( 2U == u8DataLen_Byte && isdigit(pu8Data[ 0 ]) && isdigit(pu8Data[ 1 ]) )
+    { 
+        uint8_t u8DecimalData = (pu8Data[ 0 ] - '0') * 10 + (pu8Data[ 1 ] - '0');
+       
+        int8_t i8Temp =  0 - u8DecimalData;
 
-    if( 1U == pu8Data[0] )
-    {
-        BLUENRG2__u32RxDataCnt++;
-        PRINT_DBG( "[RX] Notified\r\n" );
+        if( ( 0 > i8Temp ) && (i8Temp > -100) )
+        {
+            if ( i8LastValidRssiThreshold != i8Temp )
+            {
+                BLUENRG2__i8RssiThreshold = i8Temp;
+                printf("New Threshold set to %d \r\n", BLUENRG2__i8RssiThreshold );
+                i8LastValidRssiThreshold = BLUENRG2__i8RssiThreshold;
+            }
+            
+        }
+
     }
+    
 }
 
 //*****************************************************
@@ -624,7 +613,7 @@ static void BLUENRG2__vStopScan( void )
     uint8_t u8Ret = aci_gap_terminate_gap_proc( GAP_GENERAL_DISCOVERY_PROC );
     if( BLE_STATUS_SUCCESS != u8Ret )
     {
-        printf( "aci_gap_terminate_gap_proc() failed, %#X\n", u8Ret );
+        printf( "aci_gap_terminate_gap_proc() failed, %#X\r\n", u8Ret );
     }
     else
     {
@@ -688,16 +677,16 @@ static void BLUENRG2__vResetConnectionContext( void )
     BLUENRG2__st8Queue.bValid = false;
     BLUENRG2__st8Queue.u8Idx  = 0U;
 
-    mtu_exchanged      = 0;
-    mtu_exchanged_wait = 0;
-    write_char_len     = CHAR_VALUE_LENGTH - 3;
+    BLUENRG2__u8MTUExchanged     = 0U;
+    BLUENRG2__u8MTUExchangedWait = 0U;
+    BLUENRG2__u16WriteCharLen    = (uint16_t) CHAR_VALUE_LENGTH - (uint16_t) 3U;
 
-    for( uint16_t i = 0; i < ( CHAR_VALUE_LENGTH - 3 ); i++ )
+    for( uint16_t U16Idx = 0U; U16Idx < (uint16_t) ( CHAR_VALUE_LENGTH - 3U ); U16Idx++ )
     {
-        BLUENRG2__au8DataBuf[i] = 0x31 + ( i % 10 );
-        if( ( i + 1 ) % 10 == 0 )
+        BLUENRG2__au8DataBuf[U16Idx] = 0x31U + ( U16Idx % 10U );
+        if( ( U16Idx + 1U ) % 10U == 0U )
         {
-            BLUENRG2__au8DataBuf[i] = 'x';
+            BLUENRG2__au8DataBuf[U16Idx] = 'x';
         }
     }
 }
@@ -795,7 +784,7 @@ static void BLUENRG2__vAttributeModifiedCB( uint16_t u16AttributeHandle, uint8_t
 {
     if( u16AttributeHandle == u16LocalRxCharHandle + BLUENRG2_CHAR_VALUE_OFFSET )
     {
-        BLUENRG2__vReceiveData( pau8AttrData, u8DataLen );
+        BLUENRG2__vReceiveData( pau8AttrData, u8DataLen );    // Local Rx data
     }
     else if( u16AttributeHandle == u16LocalTxCharHandle + BLUENRG2_CHAR_CONFIG_DESC_OFFSET )
     {
@@ -806,17 +795,17 @@ static void BLUENRG2__vAttributeModifiedCB( uint16_t u16AttributeHandle, uint8_t
     }
 }
 
+
 //*****************************************************
 //! \brief  BLUENRG2__vUpdateLockStatus
 //!
 //! \param [in]  i8Rssi: Current RSSI value at run-time;
-//! \param [in]  i8LockRssiTh : Lock/unlocked threshold
 //! \param [in]  bDebounceEnable : Enable/Disable debouncing
 //!
 //! \return
 //!   None
 //*****************************************************
-static void BLUENRG2__vUpdateLockStatus( int8_t i8Rssi, int8_t i8LockRssiTh, bool bDebounceEnable )
+static void BLUENRG2__vUpdateLockStatus( int8_t i8Rssi,  bool bDebounceEnable )
 {
     static bool bLastLockState = false;
 
@@ -824,7 +813,7 @@ static void BLUENRG2__vUpdateLockStatus( int8_t i8Rssi, int8_t i8LockRssiTh, boo
     {
         if( !bDebounceEnable )
         {
-            if( i8Rssi >= i8LockRssiTh )
+            if( i8Rssi >= BLUENRG2__i8RssiThreshold )
             {
                 BLUENRG2__bMasterDevIsUnlocked = true;
             }
@@ -841,7 +830,12 @@ static void BLUENRG2__vUpdateLockStatus( int8_t i8Rssi, int8_t i8LockRssiTh, boo
             if( ( i8ProcessedRssi = BLUENRG2__i8GetProcessedRSSI( i8Rssi ) ) && BLUENRG2__bIsProcessedRSSIValid() )
             {
                 PRINT_DBG( "[RSSI] raw %d dBm, cali %d dBm\r\n", i8Rssi, i8ProcessedRssi );
-                if( i8ProcessedRssi >= i8LockRssiTh )
+                uint8_t u8DecimalValue[ 2 ];
+                u8DecimalValue[ 0 ] =  (uint8_t)abs(i8Rssi / 10);
+                u8DecimalValue[ 1 ] =  (uint8_t)abs(i8Rssi % 10);
+
+                BLUENRG2__vSendData( u8DecimalValue, sizeof(u8DecimalValue) );
+                if( i8ProcessedRssi >= BLUENRG2__i8RssiThreshold )
                 {
                     BLUENRG2__bMasterDevIsUnlocked = true;
                 }
@@ -942,6 +936,8 @@ void hci_le_connection_complete_event( uint8_t  Status,
     if( BLUENRG2__stConnCTX.u8Role == BLUENRG2_MASTER_ROLE )
     {
         BLUENRG2__enState = BLUENRG2_STAT_GET_REMOTE_TX;
+
+        BLUENRG2__stConnCTX.bHasConnection = true;
     }
     else
     {
@@ -974,17 +970,17 @@ void hci_le_advertising_report_event( uint8_t Num_Reports, Advertising_Report_t 
         if( ( ADV_IND == Advertising_Report[0].Event_Type ) &&
             BLUENRG2__bFindDeviceName( u8DataLen, Advertising_Report[0].Data ) )
         {
-            BLUENRG2__vUpdateLockStatus( Advertising_Report[0].RSSI, BLUENRG2_RSSI_THRESHOLD_NEAR, false );
+            // BLUENRG2__vUpdateLockStatus( Advertising_Report[0].RSSI, BLUENRG2_RSSI_THRESHOLD_NEAR, false );
 
-            if( BLUENRG2__bMasterDevIsUnlocked )
-            {
+            // if( BLUENRG2__bMasterDevIsUnlocked )
+            // {
                 BLUENRG2__stConnCTX.stDevice.bValid = true;
                 BLUENRG2__stConnCTX.stDevice.u8Type = Advertising_Report[0].Address_Type;
                 BLUENRG_memcpy( BLUENRG2__stConnCTX.stDevice.au8Addr, Advertising_Report[0].Address,
                                 sizeof( Advertising_Report[0].Address ) );
                 PRINT_DBG( "Device found\r\n" );
-                BLUENRG2__enState = BLUENRG2_STAT_SCAN_DONE;
-            }
+                BLUENRG2__vStopScan();
+            // }
         }
     }
 }
@@ -1110,24 +1106,24 @@ void aci_att_exchange_mtu_resp_event( uint16_t Connection_Handle, uint16_t Serve
 
     if( Server_RX_MTU <= CLIENT_MAX_MTU_SIZE )
     {
-        write_char_len = Server_RX_MTU - 3;
+        BLUENRG2__u16WriteCharLen = Server_RX_MTU - 3;
     }
     else
     {
-        write_char_len = CLIENT_MAX_MTU_SIZE - 3;
+        BLUENRG2__u16WriteCharLen = CLIENT_MAX_MTU_SIZE - 3;
     }
 
-    if( ( mtu_exchanged_wait == 0 ) || ( ( mtu_exchanged_wait == 1 ) ) )
+    if( ( BLUENRG2__u8MTUExchangedWait == 0 ) || ( ( BLUENRG2__u8MTUExchangedWait == 1 ) ) )
     {
         /**
          * The aci_att_exchange_mtu_resp_event is received also if the
          * aci_gatt_exchange_config is called by the other peer.
          * Here we manage this case.
          */
-        if( mtu_exchanged_wait == 0 )
+        if( BLUENRG2__u8MTUExchangedWait == 0 )
         {
-            mtu_exchanged_wait = 2;
+            BLUENRG2__u8MTUExchangedWait = 2;
         }
-        mtu_exchanged = 1;
+        BLUENRG2__u8MTUExchanged = 1;
     }
 }
